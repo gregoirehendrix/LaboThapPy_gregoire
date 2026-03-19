@@ -63,7 +63,7 @@ def air_basic(eta_cp, eta_tb, eta_hx, HSource, AirAmb, m_dot_air, P_high):
             raise
 
     else:
-        print("Le code à tourné sans erreur")
+        print("Le code à tourné sans erreur !")
 
     
     
