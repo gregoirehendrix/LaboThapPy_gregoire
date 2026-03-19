@@ -28,6 +28,12 @@ def air_basic(eta_cp, eta_tb, eta_hx, HSource, AirAmb, m_dot_air, P_high):
         turbine.set_parameters(eta_is = eta_tb)
         heater.set_parameters(eta = eta_hx)
         
+        #%% Set inputs
+        """compressor.set_inputs(
+            P_ex = 10e5,
+            m_dot = 10
+            )"""
+        
         #%% Add components
         air.add_component(compressor, 'Compressor')
         air.add_component(turbine, 'Turbine')
@@ -43,19 +49,19 @@ def air_basic(eta_cp, eta_tb, eta_hx, HSource, AirAmb, m_dot_air, P_high):
         air.add_source('AmbientAir', AirAmb, air.components["Turbine"], 'm-ex')
         
         #%% Guesses
-        #Compressor Guesses        
+        #Compressor Guesses
         air.set_cycle_guess(target='Compressor:su', m_dot = m_dot_air)
-        air.set_cycle_guess(target='Compressor:ex', p = P_high)
+        air.set_cycle_guess(target='Compressor:ex', p = P_high, T=500)
         # Turbine guesses    
-        air.set_cycle_guess(target='Turbine:su', p = P_high)
+        air.set_cycle_guess(target='Turbine:su', p = P_high, T=900)
         
         #%% Tolerance limit
-        air.set_residual_variable(target='Compressor:ex', variable='h', tolerance= 1e-3)
-        air.set_residual_variable(target='Compressor:ex', variable='p', tolerance= 1e-3)
-        air.set_residual_variable(target='Heater:ex_C', variable='h', tolerance= 1e-3)
-        air.set_residual_variable(target='Heater:ex_C', variable='p', tolerance= 1e-3)
-        air.set_residual_variable(target='Turbine:ex', variable='h', tolerance= 1e-3)
-        air.set_residual_variable(target='Turbine:ex', variable='p', tolerance= 1e-3)     
+        air.set_residual_variable(target='Compressor:ex', variable='h', tolerance= 1e-1)
+        air.set_residual_variable(target='Compressor:ex', variable='p', tolerance= 1e-1)
+        air.set_residual_variable(target='Heater:ex_C', variable='h', tolerance= 1e-1)
+        air.set_residual_variable(target='Heater:ex_C', variable='p', tolerance= 1e-1)
+        air.set_residual_variable(target='Turbine:ex', variable='h', tolerance= 1e-1)
+        air.set_residual_variable(target='Turbine:ex', variable='p', tolerance= 1e-1)     
     
     
     except Exception as e:
@@ -79,13 +85,13 @@ if __name__ == "__main__":
     eta_hx = 0.9
     
     # Guesses
-    m_dot_air = 10
+    m_dot_air = 1
     P_high = 10*1e5
     
     # Hot source
     T_high = 700 + 273.15
     p_high = 10*1e5
-    m_dot_H = 10
+    m_dot_H = 1
     
     # Ambient air
     T_amb = 25 + 273.15

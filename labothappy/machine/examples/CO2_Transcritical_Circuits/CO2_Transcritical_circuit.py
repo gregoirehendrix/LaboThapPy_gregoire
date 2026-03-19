@@ -433,7 +433,7 @@ def Recomp_CO2_TC(HSource, CSource, Pinch_min_GH, Pinch_min_REC, eta_pp, eta_exp
 
 if __name__ == "__main__": 
 
-    study_case = "Simple"
+    study_case = "Recup"
 
     if study_case == "Simple":
         T_cold_source = 0.1+273.15
@@ -456,7 +456,7 @@ if __name__ == "__main__":
         P_sat_T_CSource = PropsSI('P', 'T', T_cold_source,'Q',0.5,'CO2')
         P_crit_CO2 = PropsSI('PCRIT','CO2')
 
-        P_low_guess = min(1.3*P_sat_T_CSource,0.8*P_crit_CO2)   
+        P_low_guess = min(1.3*P_sat_T_CSource,0.8*P_crit_CO2)
         
         HSource = MassConnector()
         HSource.set_properties(fluid = 'Water', T = T_hot_source, p = 5e5, m_dot = 0.1)
@@ -490,7 +490,7 @@ if __name__ == "__main__":
         P_sat_T_CSource = PropsSI('P', 'T', T_cold_source,'Q',0.5,'CO2')
         P_crit_CO2 = PropsSI('PCRIT','CO2')
 
-        P_low_guess = min(1.3*P_sat_T_CSource,0.8*P_crit_CO2)   
+        P_low_guess = min(1.3*P_sat_T_CSource,0.8*P_crit_CO2)
         
         HSource = MassConnector()
         HSource.set_properties(fluid = 'Water', T = T_hot_source, p = 5e5, m_dot = 0.1)
@@ -525,7 +525,7 @@ if __name__ == "__main__":
         P_sat_T_CSource = PropsSI('P', 'T', T_cold_source,'Q',0.5,'CO2')
         P_crit_CO2 = PropsSI('PCRIT','CO2')
 
-        P_low_guess = min(1.3*P_sat_T_CSource,0.8*P_crit_CO2)   
+        P_low_guess = min(1.3*P_sat_T_CSource,0.8*P_crit_CO2)
         
         T_cold_source = 0.1+273.15
         
