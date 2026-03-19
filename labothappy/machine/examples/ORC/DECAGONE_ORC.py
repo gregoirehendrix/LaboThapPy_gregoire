@@ -5,29 +5,29 @@ Created on Thu Feb 20 10:05:01 2025
 @author: Basile
 """
 
-from machine.circuit import Circuit
+from labothappy.machine.circuit_rec import RecursiveCircuit
 from CoolProp.CoolProp import PropsSI
 
-from connector.mass_connector import MassConnector
+from labothappy.connector.mass_connector import MassConnector
 
-from component.heat_exchanger.hex_MB_charge_sensitive import HeatExchangerMB
-from component.heat_exchanger.hex_crossflowfintube_finitevolume import CrossFlowTubeAndFinsHTX
+from labothappy.component.heat_exchanger.hex_MB_charge_sensitive import HeatExchangerMB
+from labothappy.component.heat_exchanger.hex_crossflowfintube_finitevolume import CrossFlowTubeAndFinsHTX
 
-from toolbox.geometries.heat_exchanger.geometry_tube_and_fins_hx import TubeAndFinsGeom
-from toolbox.geometries.heat_exchanger.geometry_shell_and_tube_hx import ShellAndTubeGeom
-from toolbox.geometries.heat_exchanger.geometry_tube_and_fins_hx import TubeAndFinsGeom
+from labothappy.toolbox.geometries.heat_exchanger.geometry_tube_and_fins_hx import TubeAndFinsGeom
+from labothappy.toolbox.geometries.heat_exchanger.geometry_shell_and_tube_hx import ShellAndTubeGeom
+from labothappy.toolbox.geometries.heat_exchanger.geometry_tube_and_fins_hx import TubeAndFinsGeom
 
-from component.expander.turbine_polyneff import Turb_polyn_eff
-from toolbox.geometries.expander.geometry_turb_polyn import Geometry_polyn_turb
+from labothappy.component.expander.turbine_polyneff import Turb_polyn_eff
+from labothappy.toolbox.geometries.expander.geometry_turb_polyn import Geometry_polyn_turb
 
-from component.pump.pump_extrapolation import PumpExtrapolationModel
-from toolbox.geometries.pump.geometry_extrapolation_pump import Geometry_extrapol_pump
+from labothappy.component.pump.pump_extrapolation import PumpExtrapolationModel
+from labothappy.toolbox.geometries.pump.geometry_extrapolation_pump import Geometry_extrapol_pump
 
-from component.tank.tank_spliter import Spliter
-from component.tank.tank_mixer import Mixer 
+from labothappy.component.tank.tank_spliter import Spliter
+from labothappy.component.tank.tank_mixer import Mixer 
 
 #%% Define Circuit
-ORC = Circuit('Cyclopentane')
+ORC = RecursiveCircuit('Cyclopentane')
 
 #%% Create components
 Turbine = Turb_polyn_eff()

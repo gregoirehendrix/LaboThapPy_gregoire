@@ -49,6 +49,8 @@ def sCO2_basic(eta_cp, eta_ex, eta_heater, eta_cooler, HSource, P_low, P_high, T
     sCO2.set_source_properties(T=HSource.T, fluid=HSource.fluid, m_dot=HSource.m_dot, target='Hot_air', P = HSource.p)
     
     sCO2.add_source("Cold_air", CSource, sCO2.components["Gas_Cooler"], "m-su_C")
+    #sCO2.add_source("Cold_air",CSource, "Gas_Cooler", "m-su_C")
+
     sCO2.set_source_properties(T=CSource.T, fluid=CSource.fluid, m_dot=CSource.m_dot, target='Cold_air', P = CSource.p)
     
     #%%

@@ -71,6 +71,10 @@ class CompressorCstEff(BaseComponent):
     def solve(self):
         self.check_calculable()
         self.check_parametrized()
+        
+        if not self.parametrized or not self.calculable:
+            raise ValueError("Nul")
+        
         # self.print_setup()
         self.AS = CP.AbstractState('HEOS', self.su.fluid)
 
@@ -104,11 +108,18 @@ class CompressorCstEff(BaseComponent):
         print("Connectors:")
         print(f"  - su: fluid={self.su.fluid}, T={self.su.T}, p={self.su.p}, h={self.su.h}")
         print(f"  - ex: fluid={self.ex.fluid}, T={self.ex.T}, p={self.ex.p}, h={self.ex.h}")
-
+        
         print("\nResults:")
         print(f"  - h_ex: {self.ex.h}")
         print(f"  - T_ex: {self.ex.T}")
+        #
         print("=========================")
+        
+    def print_work(self):
+        print('=== Compressor Work ===')
+        print(f"  - W_dot_comp: {self.W.W_dot/1000} [kW]")
+        print("=========================")
+
 
     def print_states_connectors(self):
         print("=== Compressor Results ===")

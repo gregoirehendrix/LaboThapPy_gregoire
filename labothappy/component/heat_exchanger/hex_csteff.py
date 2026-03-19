@@ -178,7 +178,7 @@ class HexCstEff(BaseComponent):
 
     def print_results(self):
         print("=== Heat Exchanger Results ===")
-        print(f"Q: {self.Q.Q_dot}")
+        print(f"Q: {self.Q.Q_dot/1000:.3f} kW")
         print("======================")
 
     def print_states_connectors(self):

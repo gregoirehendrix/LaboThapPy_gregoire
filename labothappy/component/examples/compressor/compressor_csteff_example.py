@@ -10,17 +10,20 @@ CP = CompressorCstEff()
 
 "If the inputs are set directly"
 CP.set_inputs(
-    P_su=319296.5575177148,
-    T_su=331.033964665788,
-    P_ex=606240.1433176235,
-    fluid='R1233ZDE',  # Make sure to include fluid information
-    m_dot=0.1  # Mass flow rate
+    P_su=80*1e5,
+    T_su=273.15+50,
+    P_ex=240*1e5,
+    fluid='CO2',  # Make sure to include fluid information
+    m_dot=100  # Mass flow rate
 )
 CP.set_parameters(eta_is=0.8)
 # CP.print_setup()
 
+
+
 CP.solve()
-CP.print_results()
+#CP.print_results()
+CP.print_work()
 
 fig = CP.plot_Ts()
 fig.show()

@@ -6,14 +6,14 @@ HTX = HexCstEff()
 
 # Set input conditions
 HTX.set_inputs(
-    fluid_C='Water',
-    T_su_C=273.15 + 60,
+    fluid_C='air',
+    T_su_C=273.15 + 100,
     m_dot_C=1,
-    P_su_C=3e5,
+    P_su_C=10e5,
 
-    fluid_H='Water',
-    T_su_H=273.15 + 110,
-    m_dot_H=0.3,
+    fluid_H='CO2',
+    T_su_H=273.15 + 400,
+    m_dot_H=1,
     P_su_H=10e5,
 )
 

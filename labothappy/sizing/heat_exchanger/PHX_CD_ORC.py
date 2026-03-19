@@ -9,9 +9,9 @@ import sys
 " Common Modules from BaseClases"
 base_clases_path = r'../'
 sys.path.append(base_clases_path)
-from BaseClases import HTCorrelation as HTC
-from BaseClases import Classes as Point
-from BaseClases import VoidFraction as VF
+from labothappy.BaseClases import HTCorrelation as HTC
+from labothappy.BaseClases import Classes as Point
+from labothappy.BaseClases import VoidFraction as VF
 
 #%%
 # =============================================================================

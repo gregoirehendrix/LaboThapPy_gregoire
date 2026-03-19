@@ -56,7 +56,7 @@ def basic_CO2_HP(HSource, CSource, eta_cp, eta_gc, PP_ev, SH_ev, P_low, P_high):
     CO2_HP.add_component(GasCooler, "GasCooler")
     CO2_HP.add_component(Valve, "Valve")
     CO2_HP.add_component(Evaporator, "Evaporator")
-    
+  
     # Link components
     CO2_HP.link_components("Compressor", "m-ex", "GasCooler", "m-su_H")
     CO2_HP.link_components("GasCooler", "m-ex_H", "Valve", "m-su")
@@ -544,7 +544,7 @@ def Flash_CO2_HP_Series_CP(HSource, CSource, eta_cp, eta_gc, PP_ev, SH_ev, P_low
 
 if __name__ == "__main__":
 
-    study_case = "IHX"    
+    study_case = "Expander"    
 
     # Pressure levels
     P_low_guess = 40*1e5

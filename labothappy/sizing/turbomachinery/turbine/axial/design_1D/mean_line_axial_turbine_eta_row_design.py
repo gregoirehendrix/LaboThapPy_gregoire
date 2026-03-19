@@ -439,7 +439,7 @@ class AxialTurbineMeanLineDesign(object):
 
         return
 
-case_study = "TCO2_ORC"
+case_study = "Zorlu"
 
 if case_study == 'Cuerva':
 

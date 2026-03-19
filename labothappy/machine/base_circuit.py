@@ -401,6 +401,7 @@ class BaseCircuit:
             fig.canvas.draw()
     
             img = np.frombuffer(fig.canvas.tostring_rgb(), dtype="uint8")
+            #img = np.frombuffer(fig.canvas.buffer_rgba(), dtype="uint8")
             img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     
             frames.append(img)

@@ -762,11 +762,12 @@ class RadialTurbineMeanLineDesign(object):
         print(f"Xhi : {self.inputs['xhi']}")
         print(f"r5_r4_ratio : {self.params['r5_r4_ratio']}")
         print(f"r5h_r5t_ratio  : {self.params['r5h_r5t_ratio']}")
+        
+        print(f"eta_is: {self.eta_is}")
     
         print(f"P_in : {self.total_states['P'][0]} [Pa]")
         print(f"P_out: {self.static_states['P'][-1]} [Pa]")
         print(f"Omega: {self.params['Omega']} [RPM]")
-        print(f"eta_is: {self.eta_is}")
         print(f"W_dot : {self.W_dot} [W]")
         
         print(f"r4 : {self.params['r4']} [m]")
@@ -777,10 +778,10 @@ class RadialTurbineMeanLineDesign(object):
 Turb = RadialTurbineMeanLineDesign('CO2')
 
 Turb.set_inputs(
-    mdot = 100, # kg/s
+    mdot = 50, # kg/s
     W_dot = 4.69*1e6, # W
     p0_su = 140*1e5, # Pa
-    T0_su = 273.15 + 121, # K
+    T0_su = 273.15 + 550, # K
     p_ex = 39.8*1e5, # Pa
     )
 

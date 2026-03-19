@@ -5,12 +5,12 @@ Created on Mon Feb  3 15:31:53 2025
 @author: Basile
 """
 
-from machine.circuit_rec import RecursiveCircuit
-from connector.mass_connector import MassConnector
-from component.heat_exchanger.hex_csteff import HexCstEff
-from component.heat_exchanger.hex_cstpinch import HexCstPinch
-from component.compressor.compressor_csteff import CompressorCstEff 
-from component.valve.valve_isenthalpic import ValveIsenthalpic
+from labothappy.machine.circuit_rec import RecursiveCircuit
+from labothappy.connector.mass_connector import MassConnector
+from labothappy.component.heat_exchanger.hex_csteff import HexCstEff
+from labothappy.component.heat_exchanger.hex_cstpinch import HexCstPinch
+from labothappy.component.compressor.compressor_csteff import CompressorCstEff 
+from labothappy.component.valve.valve_isenthalpic import ValveIsenthalpic
 
 from CoolProp.CoolProp import PropsSI
 

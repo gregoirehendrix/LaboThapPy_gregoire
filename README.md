@@ -25,3 +25,5 @@ Detailed documentation is available on [ReadTheDocs](https://labothappy.readthed
 ## Reporting Issues
 
 If you encounter any issues or have suggestions, please report them through the [GitHub Issues page](../../issues).
+
+

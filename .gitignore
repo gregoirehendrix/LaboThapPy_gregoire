@@ -22,3 +22,7 @@ c_*.py
 *.bak
 
 .spyproject/
+
+# Ignore Sphinx build directory (fix "Filename too long")
+docs/build/
+**/.doctrees/

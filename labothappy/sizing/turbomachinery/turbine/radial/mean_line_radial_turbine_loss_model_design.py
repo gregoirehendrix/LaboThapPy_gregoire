@@ -494,8 +494,8 @@ class RadialTurbineMeanLineDesign(object):
                 
         self.eta_is = (hin - hout)/(hin - self.hout_s)
 
-        self.exit_loss = self.inputs['mdot']*(self.Vel_Tri_R['v5']**2)/2        
-        
+        self.exit_loss = self.inputs['mdot']*(self.Vel_Tri_R['v5']**2)/2   
+               
         return
 
 Turb = RadialTurbineMeanLineDesign('CO2')
@@ -504,7 +504,7 @@ Turb.set_inputs(
     mdot = 100, # kg/s
     W_dot = 4.69*1e6, # W
     p0_su = 140*1e5, # Pa
-    T0_su = 273.15 + 121, # K
+    T0_su = 273.15 + 120, # K
     p_ex = 39.8*1e5, # Pa
     psi = 1, # [-] : Iterate
     phi = 0.4, # [-] : Iterate

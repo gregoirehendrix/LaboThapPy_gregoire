@@ -137,9 +137,14 @@ class ExpanderCstEff(BaseComponent):
 
     def print_results(self):
         print("=== Expander Results ===")
+        print(f"  - h_su: {self.su.h} [J/kg]")
         print(f"  - h_ex: {self.ex.h} [J/kg]")
         print(f"  - T_ex: {self.ex.T} [K]")
-        print(f"  - W_dot_exp: {self.W.W_dot} [W]")
+        print("=========================")
+        
+    def print_work(self):
+        print('=== Expander Work ===')
+        print(f"  - W_dot_exp: {self.W.W_dot/1000} [kW]")
         print("=========================")
 
     def print_states_connectors(self):
