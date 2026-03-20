@@ -4,6 +4,7 @@ Created on Tue Mar 17 14:09:29 2026
 @author: gregoire.hendrix
 """
 
+#%%
 import numpy as np
 from CoolProp.CoolProp import PropsSI
 
@@ -17,7 +18,7 @@ from labothappy.component.heat_exchanger.hex_csteff_disc import HexCstEffDisc
 from labothappy.component.tank.tank_spliter import TankSpliter
 from labothappy.component.tank.tank_mixer import TankMixer
 
-
+#%%
 def compute_salt_mdot(Q_heater_kW, T_salt_in_K, T_salt_out_K):
     """Solar salt mass flow rate [kg/s] from energy balance (Zavoico 2001)."""
     T_in_C  = T_salt_in_K  - 273.15
@@ -26,10 +27,7 @@ def compute_salt_mdot(Q_heater_kW, T_salt_in_K, T_salt_out_K):
     return (Q_heater_kW * 1000) / delta_h
 
 
-# =============================================================================
-# CYCLE DEFINITIONS
-# =============================================================================
-
+#%%
 def sCO2_basic(eta_cp, eta_tb, eta_heater, eta_cooler,
                HSource, CSource, P_low, P_high, T_c_su, m_dot_CO2,
                pinch_heater=5, n_disc=20,
@@ -78,7 +76,7 @@ def sCO2_basic(eta_cp, eta_tb, eta_heater, eta_cooler,
 
     return cycle, compressor, expander, gas_heater, gas_cooler
 
-
+#%%
 def sCO2_recuperated(eta_cp, eta_tb, eta_heater, eta_cooler, eta_recuperator,
                      HSource, CSource, P_low, P_high, T_c_su, m_dot_CO2,
                      pinch_heater=5, pinch_recup=2, n_disc=20,
@@ -142,7 +140,7 @@ def sCO2_recuperated(eta_cp, eta_tb, eta_heater, eta_cooler, eta_recuperator,
 
     return cycle, compressor, expander, gas_heater, gas_cooler, recuperator
 
-
+#%%
 def sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
                        eta_recup_lt, eta_recup_ht, split_ratio,
                        HSource, CSource, P_low, P_high, T_c_su, m_dot_CO2,
@@ -249,10 +247,7 @@ def sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
     return cycle, compressor, recompressor, expander, gas_heater, gas_cooler, recup_lt, recup_ht, spliter, mixer
 
 
-# =============================================================================
-# PERFORMANCE FUNCTIONS
-# =============================================================================
-
+#%%
 def compute_cycle_performance(compressor, expander, gas_heater, gas_cooler,
                                recompressor=None, recuperator=None,
                                recup_lt=None, recup_ht=None):
@@ -281,7 +276,7 @@ def compute_cycle_performance(compressor, expander, gas_heater, gas_cooler,
         result['Q_recup_ht'] = m_dot_tot * (recup_ht.ex_C.h - recup_ht.su_C.h) / 1000
     return result
 
-
+#%%
 def print_states(compressor, expander, gas_cooler,
                  recompressor=None, recuperator=None,
                  recup_lt=None, recup_ht=None):
@@ -327,7 +322,7 @@ def print_states(compressor, expander, gas_cooler,
         print(f"  su_C T = {recup_ht.su_C.T - 273.15:.2f} °C")
         print(f"  ex_C T = {recup_ht.ex_C.T - 273.15:.2f} °C")
 
-
+#%%
 def print_efficiency(perf):
     print("=== Cycle Efficiency ===")
     print(f"  W_comp   : {perf['W_comp']:.2f} kW")
@@ -343,7 +338,7 @@ def print_efficiency(perf):
         print(f"  Q_recup_HT : {perf['Q_recup_ht']:.2f} kW")
     print(f"  eta      : {perf['eta'] * 100:.2f} %")
     balance = perf['Q_heater'] - perf['Q_cooler']
-    print(f"  --- First law check ---")
+    print("  --- First law check ---")
     print(f"  Q_heater - Q_cooler : {balance:.2f} kW")
     print(f"  W_net               : {perf['W_net']:.2f} kW")
     print(f"  Discrepancy         : {abs(perf['W_net'] - balance):.4f} kW")
@@ -353,7 +348,7 @@ def print_efficiency(perf):
 def print_efficiency_compact(perf):
     print(f"  eta : {perf['eta'] * 100:.2f} %")
 
-
+#%%
 def scale_to_power(W_net_target_MW, perf, PRINT_SCALE=True, First_Law_Check=False):
     """Scale all quantities to target net power. Reference run at m_dot_CO2 = 1 kg/s."""
     scale           = (W_net_target_MW * 1000) / perf['W_net']
@@ -380,14 +375,14 @@ def scale_to_power(W_net_target_MW, perf, PRINT_SCALE=True, First_Law_Check=Fals
             print(f"  Q_recup_HT         : {perf['Q_recup_ht'] * scale / 1000:.2f} MW")
         print(f"  eta (thermo)       : {perf['eta'] * 100:.2f} %")
         if First_Law_Check:
-            print(f"  --- First law check ---")
+            print("  --- First law check ---")
             print(f"  Q_heater - Q_cooler : {Q_heater_scaled - Q_cooler_scaled:.4f} MW")
             print(f"  W_net               : {W_net_scaled:.4f} MW")
             print(f"  Discrepancy         : {abs(W_net_scaled-(Q_heater_scaled-Q_cooler_scaled)):.6f} MW")
         print("====================================")
     return scale
 
-
+#%%
 def print_net_electric(perf, scale, W_net_target_MW=5.0):
     """
     Apply manufacturer losses: Generator 97%, Mechanical 6%, AirCooler 115 kW, BOP 55.1 kW.
@@ -411,10 +406,7 @@ def print_net_electric(perf, scale, W_net_target_MW=5.0):
     return scale_elec
 
 
-# =============================================================================
-# MAIN
-# =============================================================================
-
+#%%
 if __name__ == "__main__":
 
     study_case      = "Recompression"   # "Simple" | "Recuperated" | "Recompression"
@@ -429,22 +421,22 @@ if __name__ == "__main__":
     PINCH_RECUP = 2    # [K]
     N_DISC      = 20
 
-    # Pressures from PFD
+    # Pressures from Hanwha
     P_low_guess = 89.6  * 1e5   # [Pa]
     P_high      = 215.6 * 1e5   # [Pa]
 
     # CO2 reference mass flow rate for scaling
     m_dot_CO2 = 1   # [kg/s]
 
-    # Machine efficiencies
+    # efficiencies
     eta_tb = 0.9
     eta_cp = 0.8
     eta_rc = 0.8
 
-    # Split ratio from PFD: m_dot_MC = 47.68, m_dot_total = 68.11 kg/s
+    # Split ratio from PFD (Hanwha): m_dot_MC = 47.68, m_dot_total = 68.11 kg/s
     split_ratio = 47.68 / 68.11
 
-    T_hot_su     = 565 + 273.15   # [K] — change this to test different conditions
+    T_hot_su     = 565 + 273.15   # [K] 
     T_salt_limit = 565 + 273.15   # [K]
 
     if T_hot_su <= T_salt_limit:
@@ -460,9 +452,9 @@ if __name__ == "__main__":
         eta_heater   = 0.85
         print(f"Hot source : Air at {T_hot_su - 273.15:.1f}°C")
 
-    # Expander guesses derived from hot source temperature
-    T_exp_su_guess = T_hot_su - PINCH_HEATER   # [K] — CO2 just below hot source
-    T_exp_ex_guess = T_exp_su_guess - 100       # [K] — rough estimate
+    
+    T_exp_su_guess = T_hot_su - PINCH_HEATER   # [K] 
+    T_exp_ex_guess = T_exp_su_guess - 100       # [K] 
 
     T_cold_su    = 37.1 + 273.15   # [K]
     T_c_su_guess = 37.1 + 273.15   # [K]
