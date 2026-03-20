@@ -593,16 +593,17 @@ class RecursiveCircuit(BaseCircuit):
         return
 
     def recursive_solve(self, component_name):
-        if self.print_flag:
+        """if self.print_flag:
+        
             print(f"----------------------------------")
-            print(f"Component : {component_name}")
+            print(f"Component : {component_name}")"""
                 
         component = self.get_component(component_name)
         component_model = component.model
 
         if component_model.solved:
-            if self.print_flag:
-                print(f"Component '{component_name}' already solved.")
+            """if self.print_flag:
+                print(f"Component '{component_name}' already solved.")"""
             return
 
         component_model.check_calculable()
@@ -643,8 +644,8 @@ class RecursiveCircuit(BaseCircuit):
                 #                 component.next[connector].model.solved = False
                         
             else:
-                if self.print_flag:
-                    print(f"Component '{component_name}' not calculable.")
+                """if self.print_flag:
+                    print(f"Component '{component_name}' not calculable.")"""
                 return
         else:
             raise ValueError(f"Component '{component_name}' not parametrized.")
