@@ -6,7 +6,6 @@ Created on Tue Mar 17 14:09:29 2026
 
 #%%
 import numpy as np
-from scipy.optimize import minimize_scalar
 from CoolProp.CoolProp import PropsSI
 
 from labothappy.machine.circuit_rec import RecursiveCircuit
@@ -19,31 +18,13 @@ from labothappy.component.heat_exchanger.hex_csteff_disc import HexCstEffDisc
 from labothappy.component.tank.tank_spliter import TankSpliter
 from labothappy.component.tank.tank_mixer import TankMixer
 
-
 #%%
-def make_sources(T_hot_su_K, T_cold_su_K, T_salt_limit_K):
-    """
-    Build HSource and CSource connectors and return heater parameters.
-    Switches from SolarSalt to air above T_salt_limit.
-    """
-    if T_hot_su_K <= T_salt_limit_K:
-        HSource      = SolarSaltConnector()
-        HSource.set_properties(T=T_hot_su_K, p=2e5, m_dot=500)
-        pinch_heater = 1.2
-        eta_heater   = 0.999
-    else:
-        HSource      = MassConnector()
-        HSource.set_properties(fluid='air', T=T_hot_su_K, p=1.2e5, m_dot=500)
-        pinch_heater = 5
-        eta_heater   = 0.85
-
-    CSource = MassConnector()
-    CSource.set_properties(fluid='air', T=T_cold_su_K, p=101325, m_dot=500)
-
-    T_exp_su_guess = T_hot_su_K  - pinch_heater
-    T_exp_ex_guess = T_exp_su_guess - 100
-
-    return HSource, CSource, eta_heater, pinch_heater, T_exp_su_guess, T_exp_ex_guess
+def compute_salt_mdot(Q_heater_kW, T_salt_in_K, T_salt_out_K):
+    """Solar salt mass flow rate [kg/s] from energy balance (Zavoico 2001)."""
+    T_in_C  = T_salt_in_K  - 273.15
+    T_out_C = T_salt_out_K - 273.15
+    delta_h = 1443.0 * (T_in_C - T_out_C) + 0.086 * (T_in_C**2 - T_out_C**2)
+    return (Q_heater_kW * 1000) / delta_h
 
 
 #%%
@@ -94,7 +75,6 @@ def sCO2_basic(eta_cp, eta_tb, eta_heater, eta_cooler,
     cycle.set_residual_variable(target='Gas_Cooler:ex_H', variable='p', tolerance=1e-6)
 
     return cycle, compressor, expander, gas_heater, gas_cooler
-
 
 #%%
 def sCO2_recuperated(eta_cp, eta_tb, eta_heater, eta_cooler, eta_recuperator,
@@ -160,7 +140,6 @@ def sCO2_recuperated(eta_cp, eta_tb, eta_heater, eta_cooler, eta_recuperator,
 
     return cycle, compressor, expander, gas_heater, gas_cooler, recuperator
 
-
 #%%
 def sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
                        eta_recup_lt, eta_recup_ht, split_ratio,
@@ -171,6 +150,9 @@ def sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
     Recompression sCO2 Brayton cycle.
     Gas_Heater / RecupLT / RecupHT : HexCstEffDisc (supports SolarSalt)
     Gas_Cooler                     : HexCstEff
+    split_ratio    : fraction alpha directed to Gas_Cooler + main Compressor.
+    T_exp_su_guess : expander inlet guess [K] — derived from hot source T.
+    T_exp_ex_guess : expander outlet guess [K] — rough estimate.
     """
     if T_exp_su_guess is None: T_exp_su_guess = 598.8 + 273.15
     if T_exp_ex_guess is None: T_exp_ex_guess = 488.4 + 273.15
@@ -206,14 +188,18 @@ def sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
     cycle.add_component(spliter,      "Spliter")
     cycle.add_component(mixer,        "Mixer")
 
+    # Low pressure side
     cycle.link_components("Expander",     "m-ex",   "RecupHT",      "m-su_H")
     cycle.link_components("RecupHT",      "m-ex_H", "RecupLT",      "m-su_H")
     cycle.link_components("RecupLT",      "m-ex_H", "Spliter",      "m-su")
+    # Branch alpha -> Gas_Cooler -> Compressor -> Mixer
     cycle.link_components("Spliter",      "m-ex_1", "Gas_Cooler",   "m-su_H")
     cycle.link_components("Gas_Cooler",   "m-ex_H", "Compressor",   "m-su")
     cycle.link_components("Compressor",   "m-ex",   "Mixer",        "m-su_1")
+    # Branch (1-alpha) -> Recompressor -> Mixer
     cycle.link_components("Spliter",      "m-ex_2", "Recompressor", "m-su")
     cycle.link_components("Recompressor", "m-ex",   "Mixer",        "m-su_2")
+    # High pressure side
     cycle.link_components("Mixer",        "m-ex",   "RecupLT",      "m-su_C")
     cycle.link_components("RecupLT",      "m-ex_C", "RecupHT",      "m-su_C")
     cycle.link_components("RecupHT",      "m-ex_C", "Gas_Heater",   "m-su_C")
@@ -222,8 +208,9 @@ def sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
     cycle.add_source("Hot_source",  HSource, cycle.components["Gas_Heater"], "m-su_H")
     cycle.add_source("Cold_source", CSource, cycle.components["Gas_Cooler"], "m-su_C")
 
-    T_recupHT_ex_H = T_c_su + 165
-    T_recupHT_ex_C = T_exp_su_guess - 160
+    # Intermediate temperature guesses scaled to actual operating conditions
+    T_recupHT_ex_H = T_c_su + 165         # ~202°C at base conditions
+    T_recupHT_ex_C = T_exp_su_guess - 160  # ~440°C at base conditions
 
     cycle.set_cycle_guess(target='Expander:su',      m_dot=m_dot_CO2,                   T=T_exp_su_guess,  p=P_high)
     cycle.set_cycle_guess(target='Expander:ex',                                          T=T_exp_ex_guess,  p=P_low)
@@ -289,7 +276,6 @@ def compute_cycle_performance(compressor, expander, gas_heater, gas_cooler,
         result['Q_recup_ht'] = m_dot_tot * (recup_ht.ex_C.h - recup_ht.su_C.h) / 1000
     return result
 
-
 #%%
 def print_states(compressor, expander, gas_cooler,
                  recompressor=None, recuperator=None,
@@ -336,7 +322,6 @@ def print_states(compressor, expander, gas_cooler,
         print(f"  su_C T = {recup_ht.su_C.T - 273.15:.2f} °C")
         print(f"  ex_C T = {recup_ht.ex_C.T - 273.15:.2f} °C")
 
-
 #%%
 def print_efficiency(perf):
     print("=== Cycle Efficiency ===")
@@ -362,7 +347,6 @@ def print_efficiency(perf):
 
 def print_efficiency_compact(perf):
     print(f"  eta : {perf['eta'] * 100:.2f} %")
-
 
 #%%
 def scale_to_power(W_net_target_MW, perf, PRINT_SCALE=True, First_Law_Check=False):
@@ -398,7 +382,6 @@ def scale_to_power(W_net_target_MW, perf, PRINT_SCALE=True, First_Law_Check=Fals
         print("====================================")
     return scale
 
-
 #%%
 def print_net_electric(perf, scale, W_net_target_MW=5.0):
     """
@@ -424,102 +407,6 @@ def print_net_electric(perf, scale, W_net_target_MW=5.0):
 
 
 #%%
-def run_recompression(T_hot_su_K, T_cold_su_K, T_salt_limit_K,
-                      eta_cp, eta_rc, eta_tb, eta_cooler,
-                      eta_recup_lt, eta_recup_ht, split_ratio,
-                      P_low, P_high, m_dot_CO2,
-                      PINCH_RECUP, N_DISC):
-    """
-    Build, solve and return performance of the recompression cycle
-    for given hot source temperature and pressures.
-    """
-    HSource, CSource, eta_heater, pinch_heater, T_exp_su_g, T_exp_ex_g = \
-        make_sources(T_hot_su_K, T_cold_su_K, T_salt_limit_K)
-
-    cycle, compressor, recompressor, expander, gas_heater, gas_cooler, \
-        recup_lt, recup_ht, spliter, mixer = \
-        sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
-                           eta_recup_lt, eta_recup_ht, split_ratio,
-                           HSource, CSource, P_low, P_high, T_cold_su_K, m_dot_CO2,
-                           pinch_heater=pinch_heater, pinch_recup=PINCH_RECUP,
-                           n_disc=N_DISC,
-                           T_exp_su_guess=T_exp_su_g, T_exp_ex_guess=T_exp_ex_g)
-    cycle.solve()
-
-    perf = compute_cycle_performance(compressor, expander, gas_heater, gas_cooler,
-                                     recompressor=recompressor,
-                                     recup_lt=recup_lt, recup_ht=recup_ht)
-    return perf, compressor, recompressor, expander, gas_heater, gas_cooler, recup_lt, recup_ht
-
-
-#%%
-def optimize_P_high(T_hot_su_K, T_cold_su_K, T_salt_limit_K,
-                    eta_cp, eta_rc, eta_tb, eta_cooler,
-                    eta_recup_lt, eta_recup_ht, split_ratio,
-                    P_low, m_dot_CO2, PINCH_RECUP, N_DISC,
-                    P_high_min=150e5, P_high_max=350e5, n_points=8):
-    """
-    Find the P_high that maximises cycle thermal efficiency using a coarse
-    grid search followed by Golden-section refinement (minimize_scalar).
-
-    Returns (P_high_opt, eta_opt, perf_opt, components_opt).
-    """
-    # --- Step 1: coarse grid to find a good starting bracket ---
-    P_grid  = np.linspace(P_high_min, P_high_max, n_points)
-    eta_grid = []
-
-    for P_h in P_grid:
-        try:
-            p, *_ = run_recompression(
-                T_hot_su_K, T_cold_su_K, T_salt_limit_K,
-                eta_cp, eta_rc, eta_tb, eta_cooler,
-                eta_recup_lt, eta_recup_ht, split_ratio,
-                P_low, P_h, m_dot_CO2, PINCH_RECUP, N_DISC)
-            eta_grid.append(p['eta'])
-        except Exception:
-            eta_grid.append(np.nan)
-
-    eta_arr = np.array(eta_grid)
-    valid   = np.isfinite(eta_arr)
-
-    if not valid.any():
-        raise RuntimeError("No valid solution found during P_high grid search.")
-
-    # Best grid point as starting bracket for refinement
-    best_idx    = int(np.nanargmax(eta_arr))
-    P_high_opt  = P_grid[best_idx]
-
-    # Bracket for scalar minimisation (minimise negative eta)
-    lo = P_grid[max(best_idx - 1, 0)]
-    hi = P_grid[min(best_idx + 1, n_points - 1)]
-
-    def neg_eta(P_h):
-        try:
-            p, *_ = run_recompression(
-                T_hot_su_K, T_cold_su_K, T_salt_limit_K,
-                eta_cp, eta_rc, eta_tb, eta_cooler,
-                eta_recup_lt, eta_recup_ht, split_ratio,
-                P_low, P_h, m_dot_CO2, PINCH_RECUP, N_DISC)
-            return -p['eta']
-        except Exception:
-            return 0.0   # penalise failed solves
-
-    result = minimize_scalar(neg_eta, bounds=(lo, hi), method='bounded',
-                             options={'xatol': 1e5, 'maxiter': 20})
-
-    P_high_opt = result.x
-
-    # Final solve at the optimal pressure
-    perf_opt, cp, rcp, exp, gh, gc, rlt, rht = run_recompression(
-        T_hot_su_K, T_cold_su_K, T_salt_limit_K,
-        eta_cp, eta_rc, eta_tb, eta_cooler,
-        eta_recup_lt, eta_recup_ht, split_ratio,
-        P_low, P_high_opt, m_dot_CO2, PINCH_RECUP, N_DISC)
-
-    return P_high_opt, perf_opt['eta'], perf_opt, (cp, rcp, exp, gh, gc, rlt, rht)
-
-
-#%%
 if __name__ == "__main__":
 
     study_case      = "Recompression"   # "Simple" | "Recuperated" | "Recompression"
@@ -528,50 +415,59 @@ if __name__ == "__main__":
     PRINT_SCALE     = True
     First_Law_Check = False
     VALIDATION      = False
-    SWEEP           = True    # True → run efficiency sweep with P_high optimisation
-    W_net_target    = 5       # [MW]
+    W_net_target    = 5                 # [MW]
 
     # HX discretisation
     PINCH_RECUP = 2    # [K]
     N_DISC      = 20
 
-    # Baseline pressures from PFD (used for the main single-point solve)
+    # Pressures from Hanwha
     P_low_guess = 89.6  * 1e5   # [Pa]
     P_high      = 215.6 * 1e5   # [Pa]
 
     # CO2 reference mass flow rate for scaling
     m_dot_CO2 = 1   # [kg/s]
 
-    # Machine efficiencies
+    # efficiencies
     eta_tb = 0.9
     eta_cp = 0.8
     eta_rc = 0.8
 
-    # Split ratio from PFD: m_dot_MC = 47.68, m_dot_total = 68.11 kg/s
+    # Split ratio from PFD (Hanwha): m_dot_MC = 47.68, m_dot_total = 68.11 kg/s
     split_ratio = 47.68 / 68.11
 
-    # Solar salt valid up to 600°C — above this, switch to air
+    T_hot_su     = 600 + 273.15   # [K] 
     T_salt_limit = 600 + 273.15   # [K]
 
-    # Cold source temperature — fixed to P7 = 37.1°C (keeps CO2 supercritical)
-    T_cold_su  = 37.1 + 273.15   # [K]
-    eta_cooler = 0.999
+    if T_hot_su <= T_salt_limit:
+        HSource      = SolarSaltConnector()
+        HSource.set_properties(T=T_hot_su, p=2e5, m_dot=500)
+        PINCH_HEATER = 1.2
+        eta_heater   = 0.999
+        print(f"Hot source : Solar Salt at {T_hot_su - 273.15:.1f}°C")
+    else:
+        HSource      = MassConnector()
+        HSource.set_properties(fluid='air', T=T_hot_su, p=1.2e5, m_dot=500)
+        PINCH_HEATER = 5
+        eta_heater   = 0.85
+        print(f"Hot source : Air at {T_hot_su - 273.15:.1f}°C")
 
-    # ==========================================================================
-    # Main solve — single operating point
-    # ==========================================================================
-    T_hot_su = 600 + 273.15   # [K] — change this to test different conditions
+    
+    T_exp_su_guess = T_hot_su - PINCH_HEATER   # [K] 
+    T_exp_ex_guess = T_exp_su_guess - 100       # [K] 
 
-    HSource, CSource, eta_heater, PINCH_HEATER, T_exp_su_guess, T_exp_ex_guess = \
-        make_sources(T_hot_su, T_cold_su, T_salt_limit)
+    T_cold_su    = 37.1 + 273.15   # [K]
+    T_c_su_guess = 37.1 + 273.15   # [K]
+    eta_cooler   = 0.999
 
-    fluid_name = "Solar Salt" if T_hot_su <= T_salt_limit else "Air"
-    print(f"Hot source : {fluid_name} at {T_hot_su - 273.15:.1f}°C")
+    CSource = MassConnector()
+    CSource.set_properties(fluid='air', T=T_cold_su, p=101325, m_dot=500)
+
 
     if study_case == "Simple":
         cycle, compressor, expander, gas_heater, gas_cooler = \
             sCO2_basic(eta_cp, eta_tb, eta_heater, eta_cooler,
-                       HSource, CSource, P_low_guess, P_high, T_cold_su, m_dot_CO2,
+                       HSource, CSource, P_low_guess, P_high, T_c_su_guess, m_dot_CO2,
                        pinch_heater=PINCH_HEATER, n_disc=N_DISC,
                        T_exp_su_guess=T_exp_su_guess, T_exp_ex_guess=T_exp_ex_guess)
         cycle.solve()
@@ -581,13 +477,13 @@ if __name__ == "__main__":
             if DETAIL: print_states(compressor, expander, gas_cooler)
             print_efficiency(perf)
         scale = scale_to_power(W_net_target, perf, PRINT_SCALE, First_Law_Check)
-        print_net_electric(perf, scale, W_net_target)
+        #print_net_electric(perf, scale, W_net_target)
 
     elif study_case == "Recuperated":
         eta_recuperator = 0.85
         cycle, compressor, expander, gas_heater, gas_cooler, recuperator = \
             sCO2_recuperated(eta_cp, eta_tb, eta_heater, eta_cooler, eta_recuperator,
-                             HSource, CSource, P_low_guess, P_high, T_cold_su, m_dot_CO2,
+                             HSource, CSource, P_low_guess, P_high, T_c_su_guess, m_dot_CO2,
                              pinch_heater=PINCH_HEATER, pinch_recup=PINCH_RECUP, n_disc=N_DISC,
                              T_exp_su_guess=T_exp_su_guess, T_exp_ex_guess=T_exp_ex_guess)
         cycle.solve()
@@ -598,28 +494,32 @@ if __name__ == "__main__":
             if DETAIL: print_states(compressor, expander, gas_cooler, recuperator=recuperator)
             print_efficiency(perf)
         scale = scale_to_power(W_net_target, perf, PRINT_SCALE, First_Law_Check)
-        print_net_electric(perf, scale, W_net_target)
+        #print_net_electric(perf, scale, W_net_target)
 
     elif study_case == "Recompression":
         eta_recup_lt = 0.85
         eta_recup_ht = 0.85
 
-        perf, compressor, recompressor, expander, gas_heater, gas_cooler, recup_lt, recup_ht = \
-            run_recompression(T_hot_su, T_cold_su, T_salt_limit,
-                              eta_cp, eta_rc, eta_tb, eta_cooler,
-                              eta_recup_lt, eta_recup_ht, split_ratio,
-                              P_low_guess, P_high, m_dot_CO2,
-                              PINCH_RECUP, N_DISC)
-
+        cycle, compressor, recompressor, expander, gas_heater, gas_cooler, \
+            recup_lt, recup_ht, spliter, mixer = \
+            sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
+                               eta_recup_lt, eta_recup_ht, split_ratio,
+                               HSource, CSource, P_low_guess, P_high, T_c_su_guess, m_dot_CO2,
+                               pinch_heater=PINCH_HEATER, pinch_recup=PINCH_RECUP, n_disc=N_DISC,
+                               T_exp_su_guess=T_exp_su_guess, T_exp_ex_guess=T_exp_ex_guess)
+        cycle.solve()
+        cycle.plot_cycle_Ts()
+        perf = compute_cycle_performance(compressor, expander, gas_heater, gas_cooler,
+                                         recompressor=recompressor,
+                                         recup_lt=recup_lt, recup_ht=recup_ht)
         if PRINT:
             if DETAIL:
                 print_states(compressor, expander, gas_cooler,
                              recompressor=recompressor,
                              recup_lt=recup_lt, recup_ht=recup_ht)
             print_efficiency(perf)
-
         scale = scale_to_power(W_net_target, perf, PRINT_SCALE, First_Law_Check)
-        print_net_electric(perf, scale, W_net_target)
+        #print_net_electric(perf, scale, W_net_target)
 
         if VALIDATION:
             print("\n=== Validation vs manufacturer ===")
@@ -630,59 +530,8 @@ if __name__ == "__main__":
             print(f"  RecupLT:ex_H   T = {recup_lt.ex_H.T-273.15:.1f}°C  (P5  = ~86°C)")
             print(f"  RecupLT:ex_C   T = {recup_lt.ex_C.T-273.15:.1f}°C  (P11 = 183.7°C)")
             print(f"  RecupHT:ex_C   T = {recup_ht.ex_C.T-273.15:.1f}°C  (P15 = 440.9°C)")
+            if T_hot_su <= T_salt_limit:
+                T_salt_ex = SolarSaltConnector._T_from_h(
+                    HSource.h - (perf['Q_heater'] * scale * 1000) / (HSource.m_dot * scale))
+                print(f"  T_salt_out     = {T_salt_ex - 273.15:.1f}°C  (P14 = 440.9°C)")
             print("==================================")
-
-        # ==========================================================================
-        # Efficiency sweep with P_high optimisation at each temperature
-        # ==========================================================================
-        if SWEEP:
-            eta_gen        = 0.97
-            eta_mech       = 0.94
-            W_parasitic_kW = 115 + 55.1
-
-            T_sweep = [500, 600, 700, 800, 900, 1000]   # [°C]
-
-            # P_high search bounds — scale with temperature
-            P_high_min = 150e5    # [Pa]
-            P_high_max = 400e5    # [Pa]
-            n_grid     = 8        # coarse grid points before refinement
-
-            print("\n=== Efficiency sweep with P_high optimisation ===")
-            print(f"  {'T_hot':>8} {'Source':>10} {'P_high_opt':>12} "
-                  f"{'T_exp_su':>10} {'eta_thermo':>12} {'eta_net_elec':>14} {'m_dot_CO2':>11}")
-            print(f"  {'(°C)':>8} {'':>10} {'(bar)':>12} "
-                  f"{'(°C)':>10} {'(%)':>12} {'(%)':>14} {'(kg/s)':>11}")
-            print(f"  {'-'*83}")
-
-            for T_hot_C in T_sweep:
-                T_hot_K = T_hot_C + 273.15
-                fluid   = "SolarSalt" if T_hot_K <= T_salt_limit else "Air"
-                try:
-                    P_opt, eta_opt, p_opt, comps = optimize_P_high(
-                        T_hot_K, T_cold_su, T_salt_limit,
-                        eta_cp, eta_rc, eta_tb, eta_cooler,
-                        eta_recup_lt, eta_recup_ht, split_ratio,
-                        P_low_guess, m_dot_CO2, PINCH_RECUP, N_DISC,
-                        P_high_min=P_high_min, P_high_max=P_high_max,
-                        n_points=n_grid)
-
-                    cp, rcp, exp, gh, gc, rlt, rht = comps
-                    T_exp_su_C = exp.su.T - 273.15
-
-                    W_thermo_tgt = (W_net_target * 1000 + W_parasitic_kW) / (eta_gen * eta_mech)
-                    scale_e      = W_thermo_tgt / p_opt['W_net']
-                    Q_h          = p_opt['Q_heater'] * scale_e / 1000
-                    eta_e        = W_net_target / Q_h * 100
-
-                    print(f"  {T_hot_C:>8} {fluid:>10} {P_opt/1e5:>12.1f} "
-                          f"{T_exp_su_C:>10.1f} {eta_opt*100:>12.2f} {eta_e:>14.2f} {scale_e:>11.2f}")
-
-                except Exception as e:
-                    print(f"  {T_hot_C:>8} {fluid:>10} {'ERROR':>12} — {e}")
-
-            print(f"  {'='*83}")
-            print()
-            print("  Manufacturer reference:")
-            ref = [(500,30.8),(600,37.2),(700,43.6),(800,50.0),(900,56.4),(1000,62.8)]
-            for T_C, eta_ref in ref:
-                print(f"    {T_C}°C → {eta_ref}%")
