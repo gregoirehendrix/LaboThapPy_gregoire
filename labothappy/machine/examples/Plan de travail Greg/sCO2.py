@@ -434,9 +434,9 @@ if __name__ == "__main__":
     eta_rc = 0.8
 
     # Split ratio from PFD (Hanwha): m_dot_MC = 47.68, m_dot_total = 68.11 kg/s
-    split_ratio = 47.68 / 68.11
+    split_ratio = 0.7
 
-    T_hot_su     = 565 + 273.15   # [K] 
+    T_hot_su     = 750 + 273.15   # [K] 
     T_salt_limit = 565 + 273.15   # [K]
 
     if T_hot_su <= T_salt_limit:
@@ -458,7 +458,7 @@ if __name__ == "__main__":
 
     T_cold_su    = 37.1 + 273.15   # [K]
     T_c_su_guess = 37.1 + 273.15   # [K]
-    eta_cooler   = 0.999
+    eta_cooler   = 0.95
 
     CSource = MassConnector()
     CSource.set_properties(fluid='air', T=T_cold_su, p=101325, m_dot=500)
