@@ -6,7 +6,7 @@ from component.base_component import BaseComponent
 import CoolProp.CoolProp as CP
 
 # Fluids not available in CoolProp — properties must come from the connector directly
-CUSTOM_FLUIDS = {'SolarSalt'}
+CUSTOM_FLUIDS = {'SolarSalt', 'OilHTF'}
 
 class HexCstEff(BaseComponent):
     """
@@ -25,7 +25,7 @@ class HexCstEff(BaseComponent):
         - No phase change or pressure drop effects are modeled.
         - Uniform flow distribution on both hot and cold sides.
         - Fluid properties are retrieved from CoolProp.
-        - For custom fluids (e.g. SolarSalt), properties are taken from the connector directly.
+        - For custom fluids (e.g. SolarSalt, OilHTF), properties are taken from the connector directly.
     
     **Connectors**:
     
@@ -147,7 +147,7 @@ class HexCstEff(BaseComponent):
         except Exception:
             pass
 
-        # --- Path 3: Cp from connector (custom fluids — e.g. SolarSalt) ---
+        # --- Path 3: Cp from connector (custom fluids — e.g. SolarSalt, OilHTF) ---
         # Requires su_H.cp and su_C.cp to be pre-computed by the custom connector.
         cp_c = self.su_C.cp
         cp_h = self.su_H.cp
@@ -168,19 +168,23 @@ class HexCstEff(BaseComponent):
         self.ex_C.set_p(self.su_C.p - self.DP_c)
 
         # --- Hot side ---
-        # For custom fluids (not in CoolProp), bypass set_fluid to avoid CoolProp lookup.
-        # Properties are recovered from the source connector's own correlations.
         if self.su_H.fluid in CUSTOM_FLUIDS:
             self.ex_H.fluid  = self.su_H.fluid
             self.ex_H.m_dot  = self.su_H.m_dot
             self.ex_H.p      = self.su_H.p - self.DP_h
             h_ex_H           = self.su_H.h - Q_dot / self.su_H.m_dot
             self.ex_H.h      = h_ex_H
-            # Recover T, cp, rho from outlet enthalpy using the source connector's methods
-            self.ex_H.T      = type(self.su_H)._T_from_h(h_ex_H)
-            self.ex_H.cp     = type(self.su_H)._Cp(self.ex_H.T)
-            self.ex_H.D      = type(self.su_H)._rho(self.ex_H.T)
-            self.ex_H.state_known     = True
+            # SolarSalt: recover T/cp/rho via class methods on SolarSaltConnector
+            # Generic custom fluid (e.g. OilHTF, h = Cp*T): recover T from enthalpy directly
+            if hasattr(type(self.su_H), '_T_from_h'):
+                self.ex_H.T  = type(self.su_H)._T_from_h(h_ex_H)
+                self.ex_H.cp = type(self.su_H)._Cp(self.ex_H.T)
+                self.ex_H.D  = type(self.su_H)._rho(self.ex_H.T)
+            else:
+                self.ex_H.cp = self.su_H.cp
+                self.ex_H.T  = h_ex_H / self.su_H.cp   # h = Cp*T, reference h=0 at T=0 K
+                self.ex_H.D  = self.su_H.D
+            self.ex_H.state_known      = True
             self.ex_H.completely_known = True
         else:
             self.ex_H.set_fluid(self.su_H.fluid)

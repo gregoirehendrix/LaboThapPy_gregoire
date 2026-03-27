@@ -9,7 +9,7 @@ from labothappy.connector.solar_salt_connector import SolarSaltConnector
 fluid       = 'Air'
 T_amb       = 13.2 + 273.15
 P_atm       = 1.01325e5
-PR          = 10.0
+PR          = 2
 eta_comp    = 0.8
 eta_turb    = 0.9
 eta_HX      = 1
@@ -17,7 +17,7 @@ P_salt      = 1e5
 T_salt_cold = 290 + 273.15
 
 T_salt_limit = 565 + 273.15   # K — switch threshold
-T_hot_su     = 1000 + 273.15   # K — change this to go above salt limit
+T_hot_su     = 850 + 273.15   # K — change this to go above salt limit
 
 # --- Hot source selection ---
 if T_hot_su <= T_salt_limit:

@@ -288,7 +288,8 @@ class BaseComponent:
         self.calculable = all(self.inputs.get(inp) is not None for inp in required_inputs) # check if all required inputs are set
         if not self.calculable:
             if self.print_flag:
-                print(f"Component {self.__class__.__name__} is not calculable. Missing inputs: {', '.join([inp for inp in required_inputs if self.inputs.get(inp) is None])}")
+                test=1
+                #print(f"Component {self.__class__.__name__} is not calculable. Missing inputs: {', '.join([inp for inp in required_inputs if self.inputs.get(inp) is None])}")
         return self.calculable
 
     def check_parametrized(self):
