@@ -442,8 +442,8 @@ if __name__ == "__main__":
     if T_hot_su <= T_salt_limit:
         HSource      = SolarSaltConnector()
         HSource.set_properties(T=T_hot_su, p=2e5, m_dot=500)
-        PINCH_HEATER = 1.2
-        eta_heater   = 0.999
+        PINCH_HEATER = 1.2                  # pinch_min & eta_max, la première contrainte atteinte est limitante, donc si eta = 0.8 et à ce moment là le pinch est > 1.2, alors le solver s'arrete là
+        eta_heater   = 0.999                #
         print(f"Hot source : Solar Salt at {T_hot_su - 273.15:.1f}°C")
     else:
         HSource      = MassConnector()
@@ -519,7 +519,7 @@ if __name__ == "__main__":
                              recup_lt=recup_lt, recup_ht=recup_ht)
             print_efficiency(perf)
         scale = scale_to_power(W_net_target, perf, PRINT_SCALE, First_Law_Check)
-        #print_net_electric(perf, scale, W_net_target)
+        print_net_electric(perf, scale, W_net_target)
 
         if VALIDATION:
             print("\n=== Validation vs manufacturer ===")
