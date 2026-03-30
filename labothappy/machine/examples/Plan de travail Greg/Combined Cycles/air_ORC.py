@@ -34,10 +34,11 @@ from labothappy.component.expander.expander_csteff     import ExpanderCstEff
 from labothappy.component.heat_exchanger.hex_csteff    import HexCstEff
 from labothappy.component.pump.pump_csteff             import PumpCstEff
 
+
+#%%
 # =============================================================================
 # SHARED PARAMETERS
 # =============================================================================
-
 # --- Brayton ---
 fluid_br    = 'Air'
 T_amb       = 13.2  + 273.15    # K  — ambient / compressor inlet
@@ -70,10 +71,11 @@ P_cold      = P_atm
 m_dot_cold  = 10.0             # kg/s
 
 
+
+#%%
 # =============================================================================
 # BRAYTON FUNCTIONS
 # =============================================================================
-
 def brayton_simple():
     """Open Air Brayton — no recuperator. Sequential solve via IterativeCircuit."""
 
@@ -112,7 +114,7 @@ def brayton_simple():
 
     return cycle, compressor, heater, turbine, None   # None = no recuperator
 
-
+#%%
 def brayton_recuperated():
     """Open Air Brayton with recuperator. RecursiveCircuit."""
 
@@ -181,7 +183,7 @@ def brayton_recuperated():
 
     return cycle, compressor, heater, turbine, recuperator
 
-
+#%%
 # =============================================================================
 # ORC FUNCTIONS
 # =============================================================================
@@ -193,7 +195,7 @@ def _orc_guesses():
     return T_sat_hi + 10, T_sat_lo + 20, T_sat_lo - 3
     # returns: T_exp_su_guess, T_exp_ex_guess, T_pump_su_guess
 
-
+#%%
 def orc_simple(T_hot_source, P_hot_source=None):
     """
     Simple ORC — no recuperator.
@@ -255,7 +257,7 @@ def orc_simple(T_hot_source, P_hot_source=None):
 
     return cycle, pump, evap, expander, condenser, None
 
-
+#%% fct pas encore
 def orc_recuperated(T_hot_source, P_hot_source=None):
     """
     ORC with recuperator.
@@ -332,7 +334,7 @@ def orc_recuperated(T_hot_source, P_hot_source=None):
 
     return cycle, pump, evap, expander, condenser, recup
 
-
+#%%
 # =============================================================================
 # PRINT FUNCTIONS
 # =============================================================================
@@ -358,7 +360,7 @@ def print_brayton(compressor, heater, turbine, recuperator=None):
     print(f"  Q_in           = {Q_in/1e3:.2f}  [kW/kg/s air]")
     print(f"  eta_Br         = {W_net/Q_in*100:.1f}  [%]")
 
-
+#%%
 def print_combined(compressor, heater, turbine, recuperator,
                    pump, evap, expander, condenser, recup_orc):
 
@@ -415,7 +417,7 @@ def print_combined(compressor, heater, turbine, recuperator,
     print(f"  Gain vs Br     = +{(eta_comb - eta_br)*100:5.1f}  pp")
     print(f"  {'='*48}")
 
-
+#%%
 # =============================================================================
 # MAIN
 # =============================================================================

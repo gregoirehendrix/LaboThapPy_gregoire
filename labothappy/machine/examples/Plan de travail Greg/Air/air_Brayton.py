@@ -9,7 +9,7 @@ from labothappy.connector.solar_salt_connector import SolarSaltConnector
 fluid       = 'Air'
 T_amb       = 13.2 + 273.15
 P_atm       = 1.01325e5
-PR          = 2
+PR          = 11
 eta_comp    = 0.8
 eta_turb    = 0.9
 eta_HX      = 1
@@ -31,57 +31,64 @@ else:
     hot_fluid  = 'Air'
     #print(f"Hot source : Hot Air at {T_hot_su - 273.15:.1f} °C")
 
-# --- Circuit ---
-cycle = IterativeCircuit(fluid=fluid)
+def brayton_simple():
+    # --- Circuit ---
+    cycle = IterativeCircuit(fluid=fluid)
+    
+    Compressor = CompressorCstEff()
+    Heater     = HexCstEff()
+    Turbine    = ExpanderCstEff()
+    
+    Compressor.set_parameters(eta_is=eta_comp)
+    Turbine.set_parameters(eta_is=eta_turb)
+    Heater.set_parameters(eta=eta_HX)
+    
+    cycle.add_component(Compressor, "Compressor")
+    cycle.add_component(Heater,     "Heater")
+    cycle.add_component(Turbine,    "Turbine")
+    
+    # --- Links (air side) ---
+    cycle.link_components("Compressor", "m-ex",   "Heater",  "m-su_C")
+    cycle.link_components("Heater",     "m-ex_C", "Turbine", "m-su")
+    
+    # --- Air inlet source ---
+    air_in = MassConnector()
+    cycle.add_source("AirInlet", air_in, cycle.components["Compressor"], "m-su")
+    cycle.set_source_properties(
+        target = "AirInlet",
+        fluid  = fluid,
+        T      = T_amb,
+        P      = P_atm,
+        m_dot  = 1.0
+    )
+    
+    # --- Hot source ---
+    cycle.add_source("HotSource", hot_source, cycle.components["Heater"], "m-su_H")
+    cycle.set_source_properties(
+        target = "HotSource",
+        fluid  = hot_fluid,
+        T      = T_hot_su,
+        P      = P_salt,
+        m_dot  = 10.0
+    )
+    
+    # --- Imposed pressures ---
+    cycle.set_cycle_input(target="Compressor:ex", p=P_atm * PR)
+    cycle.set_cycle_input(target="Turbine:ex",    p=P_atm)
+    
+    # --- Sequential solve ---
+    cycle._build_solve_order()
+    for name in cycle.solve_start_components:
+        cycle.components[name].solve()
 
-Compressor = CompressorCstEff()
-Heater     = HexCstEff()
-Turbine    = ExpanderCstEff()
 
-Compressor.set_parameters(eta_is=eta_comp)
-Turbine.set_parameters(eta_is=eta_turb)
-Heater.set_parameters(eta=eta_HX)
-
-cycle.add_component(Compressor, "Compressor")
-cycle.add_component(Heater,     "Heater")
-cycle.add_component(Turbine,    "Turbine")
-
-# --- Links (air side) ---
-cycle.link_components("Compressor", "m-ex",   "Heater",  "m-su_C")
-cycle.link_components("Heater",     "m-ex_C", "Turbine", "m-su")
-
-# --- Air inlet source ---
-air_in = MassConnector()
-cycle.add_source("AirInlet", air_in, cycle.components["Compressor"], "m-su")
-cycle.set_source_properties(
-    target = "AirInlet",
-    fluid  = fluid,
-    T      = T_amb,
-    P      = P_atm,
-    m_dot  = 1.0
-)
-
-# --- Hot source ---
-cycle.add_source("HotSource", hot_source, cycle.components["Heater"], "m-su_H")
-cycle.set_source_properties(
-    target = "HotSource",
-    fluid  = hot_fluid,
-    T      = T_hot_su,
-    P      = P_salt,
-    m_dot  = 10.0
-)
-
-# --- Imposed pressures ---
-cycle.set_cycle_input(target="Compressor:ex", p=P_atm * PR)
-cycle.set_cycle_input(target="Turbine:ex",    p=P_atm)
-
-# --- Sequential solve ---
-cycle._build_solve_order()
-for name in cycle.solve_start_components:
-    cycle.components[name].solve()
 
 # --- Results ---
-W_comp = Compressor.W.W_dot
+try:
+    W_comp = Compressor.W.W_dot
+except NameError:
+    print("J'étais en train de réarranger par fonctions")
+    sys.exit()
 W_turb = Turbine.W.W_dot
 W_net  = W_turb - W_comp
 Q_in   = Heater.Q.Q_dot
