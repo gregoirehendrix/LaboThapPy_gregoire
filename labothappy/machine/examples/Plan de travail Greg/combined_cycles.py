@@ -37,7 +37,7 @@ eta_HX       = 1.0
 P_salt       = 1e5             # Pa
 T_salt_cold  = 290 + 273.15   # K
 T_salt_limit = 565 + 273.15   # K
-T_hot_su     = 950 + 273.15   # K
+T_hot_su     = 850 + 273.15   # K
 
 Cp_oil   = 2200.0      # J/kg/K
 P_air_ex = P_atm       # Pa — turbine exhaust at atmospheric pressure
