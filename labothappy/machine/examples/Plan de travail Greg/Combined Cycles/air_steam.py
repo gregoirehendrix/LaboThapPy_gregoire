@@ -58,7 +58,7 @@ eta_HX        = 1.0
 P_salt        = 1e5            # Pa
 T_salt_cold   = 290 + 273.15   # K
 T_salt_limit  = 565 + 273.15   # K
-T_hot_su      = 850 + 273.15   # K
+T_hot_su      = 1000 + 273.15   # K
 
 Cp_oil        = 2200.0         # J/kg/K
 P_oil         = 2e5            # Pa
@@ -566,7 +566,7 @@ def print_results(x_opt, eta_opt, det, brayton, m_dot_air):
         print(f"  W_ST_HP        = {r_st['W_hp']/1e3:7.2f} kW/kg/s_wf")
         print(f"  W_ST_LP        = {r_st['W_lp']/1e3:7.2f} kW/kg/s_wf")
     print(f"  W_net_Rankine  = {det['W_net_st']/1e3:7.2f} kW/kg/s  →  {det['W_net_st']/1e6*m_dot_air:6.2f} MW")
-    print(f"  W_net_total    = {W_net_sp:7.2f} kW/kg/s  →  {W_net_sp/1e3*m_dot_air:6.2f} MW  ✓")
+    print(f"  W_net_total    = {W_net_sp:7.2f} kW/kg/s  →  {W_net_sp/1e3*m_dot_air:6.2f} MW")
     print(f"  Q_HEX1         = {det['Q_HEX1']/1e3:7.2f} kW/kg/s  →  {det['Q_HEX1']/1e6*m_dot_air:6.2f} MW")
     print(f"  Q_in_Brayton   = {brayton['Q_in']/1e3:7.2f} kW/kg/s  →  {brayton['Q_in']/1e6*m_dot_air:6.2f} MW")
     if PIPE_LOSSES:
@@ -606,7 +606,7 @@ if __name__ == "__main__":
         print(f"           dT_rh     ∈ [{bounds[5][0]:.0f}, {bounds[5][1]:.0f}] K")
     print()
 
-    diagnose_feasibility(brayton, bounds)
+    #diagnose_feasibility(brayton, bounds)
 
     x0, eta_x0 = find_x0(brayton, bounds)
     if x0 is None:
