@@ -20,6 +20,9 @@ Pipe losses integrated in optimisation:
   Rankine and all downstream pinch checks use T_oil_sg_in, not T_oil_su.
 """
 
+
+#eau sous pression 25bar 200°C ORC
+
 # ===========================================================================
 # USER OPTIONS
 # ===========================================================================
