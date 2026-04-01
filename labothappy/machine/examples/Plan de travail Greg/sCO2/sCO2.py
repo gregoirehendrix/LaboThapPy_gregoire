@@ -436,7 +436,7 @@ if __name__ == "__main__":
     # Split ratio from PFD (Hanwha): m_dot_MC = 47.68, m_dot_total = 68.11 kg/s
     split_ratio = 47.68 / 68.11
 
-    T_hot_su     = 600 + 273.15   # [K] 
+    T_hot_su     = 1000 + 273.15   # [K] 
     T_salt_limit = 600 + 273.15   # [K]
 
     if T_hot_su <= T_salt_limit:
