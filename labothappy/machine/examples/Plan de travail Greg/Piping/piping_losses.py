@@ -1,29 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr  1 15:29:21 2026
+Standalone validation script — Molten salt piping losses
+Energy-equivalent thermal loss model (per diameter class)
 
-@author: gregoire.hendrix
+Author: Grégoire Hendrix
+Date  : Apr 2026
 """
-
-# =========================================================
-# Test standalone — Molten salt piping losses
-# =========================================================
 
 import numpy as np
 
-# -------------------------------
-# INPUT DATA (TEST CASE)
-# -------------------------------
 
-# Temperatures
+# --- Temperatures ---
 T_hot = 565 + 273.15      # K  (solar field outlet)
-T_amb = 25 + 273.15       # K  (ambient)
+T_amb = 25 + 273.15       # K  (ambient temperature)
 
-# Molten salt properties
+# --- Molten salt properties (temperature dependent Cp) ---
 T_C = T_hot - 273.15
-Cp_salt = 1443.0 + 0.172 * T_C
+Cp_salt = 1443.0 + 0.172 * T_C    # J/kg/K
 
-# Network data (example from your case)
+# --- Network geometry (from layout model) ---
+# RMS length per diameter [m]
 rms_per_diam = {
     '3"'     : 495.0,
     '2 1/2"' : 200.0,
@@ -31,6 +27,7 @@ rms_per_diam = {
     '1 1/4"' : 200.0
 }
 
+# Total length per diameter [m]
 lengths_per_diam = {
     '3"'     : 16000.0,
     '2 1/2"' : 4000.0,
@@ -38,18 +35,22 @@ lengths_per_diam = {
     '1 1/4"' : 4000.0
 }
 
-# Representative charge (number of towers carried by pipes of this diameter)
-charge_per_diam = {
-    '3"'     : 100,
+# --- Equivalent thermal flow per diameter ---
+# IMPORTANT:
+# This does NOT represent the flow in a single pipe.
+# It represents the TOTAL equivalent number of CSP units
+# transported by all pipes of this diameter together.
+equivalent_units_per_diam = {
+    '3"'     : 100,   # e.g. ~20 pipes × 5 units each
     '2 1/2"' : 25,
     '2"'     : 10,
     '1 1/4"' : 5
 }
 
-# Flow per tower
-m_dot_unit = 0.8           # kg/s per CSP unit
+# --- Flow per CSP unit ---
+m_dot_unit = 6.39   # kg/s per CSP unit
 
-# Pipe diameters [m]
+# --- Pipe external diameters [m] ---
 DIAMETER_M = {
     '3"'     : 0.089,
     '2 1/2"' : 0.075,
@@ -57,7 +58,7 @@ DIAMETER_M = {
     '1 1/4"' : 0.042
 }
 
-# Overall heat transfer coefficients [W/m²/K]
+# --- Overall heat transfer coefficients [W/m²/K] ---
 U_PIPE = {
     '3"'     : 0.9,
     '2 1/2"' : 1.0,
@@ -65,17 +66,21 @@ U_PIPE = {
     '1 1/4"' : 1.2
 }
 
-# -------------------------------
-# FUNCTION
-# -------------------------------
 
 def compute_total_molten_salt_piping_losses(
     T_hot, T_amb,
     rms_per_diam, lengths_per_diam,
-    charge_per_diam, m_dot_unit,
+    equivalent_units_per_diam, m_dot_unit,
     DIAMETER_M, U_PIPE,
     Cp_salt
 ):
+    """
+    Computes total molten salt piping losses using an
+    exponential (NTU-based) energy-equivalent model.
+
+    Returns:
+        Q_loss_tot [W]
+    """
 
     Q_loss_tot = 0.0
 
@@ -83,43 +88,50 @@ def compute_total_molten_salt_piping_losses(
 
     for d in rms_per_diam:
 
+        # Geometry
         L_rms = rms_per_diam[d]
         L_tot = lengths_per_diam[d]
-        n_k   = L_tot / L_rms
+        n_k   = L_tot / L_rms                   # number of equivalent segments
 
-        m_dot_k = charge_per_diam[d] * m_dot_unit
+        # Equivalent mass flow
+        m_dot_k = equivalent_units_per_diam[d] * m_dot_unit
 
-        D_k   = DIAMETER_M[d]
-        U_k   = U_PIPE[d]
+        # Thermal parameters
+        D_k = DIAMETER_M[d]
+        U_k = U_PIPE[d]
 
         A_rms = np.pi * D_k * L_rms
         NTU   = U_k * A_rms / (m_dot_k * Cp_salt)
 
-        Q_k = n_k * m_dot_k * Cp_salt * (T_hot - T_amb) * (1 - np.exp(-NTU))
+        # Thermal losses
+        Q_k = (
+            n_k
+            * m_dot_k
+            * Cp_salt
+            * (T_hot - T_amb)
+            * (1.0 - np.exp(-NTU))
+        )
 
         Q_loss_tot += Q_k
 
         print(f"\nDiameter {d}")
-        print(f"  n_segments   = {n_k:.2f}")
-        print(f"  m_dot_k      = {m_dot_k:.2f} kg/s")
-        print(f"  L_rms        = {L_rms:.1f} m")
-        print(f"  NTU          = {NTU:.3f}")
-        print(f"  Q_loss_k     = {Q_k/1e6:.2f} MW")
+        print(f"  n_segments (equiv) : {n_k:.2f}")
+        print(f"  m_dot_equiv        : {m_dot_k:.2f} kg/s")
+        print(f"  L_rms              : {L_rms:.1f} m")
+        print(f"  NTU                : {NTU:.4f}")
+        print(f"  Q_loss             : {Q_k/1e6:.2f} MW")
 
     print("\n============================================")
     return Q_loss_tot
 
 
-# -------------------------------
-# RUN TEST
-# -------------------------------
 
 Q_loss_total = compute_total_molten_salt_piping_losses(
     T_hot=T_hot,
     T_amb=T_amb,
     rms_per_diam=rms_per_diam,
     lengths_per_diam=lengths_per_diam,
-    charge_per_diam=charge_per_diam,
+    equivalent_units_per_diam=equivalent_units_per_diam,
     m_dot_unit=m_dot_unit,
     DIAMETER_M=DIAMETER_M,
     U_PIPE=U_PIPE,
@@ -128,13 +140,9 @@ Q_loss_total = compute_total_molten_salt_piping_losses(
 
 print(f"\n>>> TOTAL piping losses: {Q_loss_total/1e6:.2f} MW")
 
-# -------------------------------
-# Equivalent salt temperature at PB
-# -------------------------------
-
 N_units = 100
 m_dot_total = N_units * m_dot_unit
 
 T_salt_PB = T_hot - Q_loss_total / (m_dot_total * Cp_salt)
 
-print(f">>> Salt temperature at PB inlet: {T_salt_PB - 273.15:.1f} °C")
+print(f">>> Salt temperature at Steam Gen: {T_salt_PB - 273.15:.1f} °C")
