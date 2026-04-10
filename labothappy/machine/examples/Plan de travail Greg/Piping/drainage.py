@@ -34,7 +34,7 @@ Physics:
     Time:       t = V / Q                      [s]
 
 Calibrated parameters (adjust in __main__):
-    FILL  = 0.60    fill ratio h/D [-]
+    FILL  = 0.55    fill ratio h/D [-]
     EPS   = 46e-6   pipe wall roughness [m]  (commercial steel/stainless)
 """
 
@@ -43,10 +43,6 @@ from labothappy.connector.solar_salt_connector import SolarSaltConnector
 
 G = 9.81   # gravitational acceleration [m/s^2]
 
-
-# =============================================================================
-# Geometry of a partially filled circular pipe
-# =============================================================================
 
 def circular_pipe_geometry(D, fill_ratio):
     """
@@ -107,10 +103,6 @@ def colebrook_white(Re_h, D_h, eps, max_iter=200, tol=1e-10):
         f = f_new
     return f
 
-
-# =============================================================================
-# Core function
-# =============================================================================
 
 def drainage_time(D_int, slope, L, T_C, fill_ratio, eps=46e-6, verbose=True):
     """
@@ -209,72 +201,19 @@ def drainage_time(D_int, slope, L, T_C, fill_ratio, eps=46e-6, verbose=True):
     }
 
 
-# =============================================================================
-# Validation against field reference
-# =============================================================================
-
-def validate_reference(fill_ratio, eps):
-    """DN70 | slope=0.15% | L=300m | t_ref=30min | T=430C (avg during drain)."""
-    print("\n>>> FIELD REFERENCE VALIDATION")
-    print(f"    DN70 | slope=0.15% | L=300m | t_ref=30 min")
-    print(f"    fill_ratio={fill_ratio:.2f} | eps={eps*1e6:.0f} um")
-    res   = drainage_time(D_int=0.070, slope=0.0015, L=300.0, T_C=430.0,
-                          fill_ratio=fill_ratio, eps=eps)
-    t_ref = 30.0
-    err   = (res["t_min"] - t_ref) / t_ref * 100
-    print(f"    Model: {res['t_min']:.1f} min  |  Field: {t_ref:.0f} min  |  Error: {err:+.1f}%\n")
-    return res
-
-
-# =============================================================================
-# Parametric study
-# =============================================================================
-
-def parametric_study(fill_ratio, eps):
-    """Sweep over diameters and temperatures for L=200m, slope=0.15%."""
-    L     = 200.0
-    slope = 0.0015
-
-    diameters_mm = [50, 70, 100, 150, 200]
-    temps_C      = [300, 400, 565]
-
-    print(f"\n>>> PARAMETRIC STUDY -- L=200m, slope=0.15%")
-    print(f"    fill_ratio={fill_ratio:.2f} | eps={eps*1e6:.0f} um")
-    print(f"{'D_int':^12}", end="")
-    for T in temps_C:
-        print(f"{'T='+str(T)+'C':^22}", end="")
-    print()
-    print("-" * 78)
-
-    for D_mm in diameters_mm:
-        D_int = D_mm / 1000.0
-        print(f"  DN{D_mm:<8}", end="")
-        for T in temps_C:
-            res = drainage_time(D_int=D_int, slope=slope, L=L, T_C=T,
-                                fill_ratio=fill_ratio, eps=eps, verbose=False)
-            print(f"  {res['t_min']:>7.1f} min ({res['Re_h']:.0f})  ", end="")
-        print()
-    print("  (Re_h shown in parentheses)")
-    print()
-
-
-# =============================================================================
-# Main  --  only place to change parameters
-# =============================================================================
 
 if __name__ == "__main__":
 
-    FILL = 0.55    # fill ratio h/D  -- calibrated on field data
+    FILL = 0.53    # fill ratio h/D  -- calibrated on field data
     EPS  = 46e-6   # pipe roughness [m] -- commercial steel/stainless
-
-    validate_reference(FILL, EPS)
-
-    print("\n>>> CASE 1: L=200m | slope=0.15% | T=565C")
-    drainage_time(D_int=0.070, slope=0.0015, L=200.0, T_C=565.0,
+    
+    DN = 50
+    slope = 0.5      # %
+    L = 600         # m
+    T = 450         # °C
+    
+    
+    print("\n>>> CASE 1: L=", L,"m | slope=",slope,"% | T=",T,"C")
+    drainage_time(D_int=DN/1000, slope=slope/100, L=L, T_C=T,
                   fill_ratio=FILL, eps=EPS)
-
-    print("\n>>> CASE 2: L=200m | slope=0.15% | T=300C")
-    drainage_time(D_int=0.070, slope=0.0015, L=200.0, T_C=300.0,
-                  fill_ratio=FILL, eps=EPS)
-
-    parametric_study(FILL, EPS)
+    

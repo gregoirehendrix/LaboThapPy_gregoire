@@ -511,8 +511,8 @@ def plot_network(blue_pos, sol, DIST, M):
         lw   = 3         if internal_id in hubs else 0.7
         ax.add_patch(Rectangle((x, y), DIST, DIST,
                                facecolor="#0B3D91", edgecolor=edge, linewidth=lw))
-        ax.text(x + DIST / 2, y + DIST / 2, str(display_id),
-                ha="center", va="center", color="white")
+        ax.text(x + DIST / 2, y + DIST / 2, str(internal_id),
+                ha="center", va="center", color="white", fontsize = 20)
 
     PB_SIZE = 0.3 * DIST
     xpb, ypb = coords[0]

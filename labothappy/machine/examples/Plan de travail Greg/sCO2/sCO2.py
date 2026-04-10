@@ -146,14 +146,7 @@ def sCO2_recompression(eta_cp, eta_rc, eta_tb, eta_heater, eta_cooler,
                        HSource, CSource, P_low, P_high, T_c_su, m_dot_CO2,
                        pinch_heater=5, pinch_recup=2, n_disc=20,
                        T_exp_su_guess=None, T_exp_ex_guess=None):
-    """
-    Recompression sCO2 Brayton cycle.
-    Gas_Heater / RecupLT / RecupHT : HexCstEffDisc (supports SolarSalt)
-    Gas_Cooler                     : HexCstEff
-    split_ratio    : fraction alpha directed to Gas_Cooler + main Compressor.
-    T_exp_su_guess : expander inlet guess [K] — derived from hot source T.
-    T_exp_ex_guess : expander outlet guess [K] — rough estimate.
-    """
+    
     if T_exp_su_guess is None: T_exp_su_guess = 598.8 + 273.15
     if T_exp_ex_guess is None: T_exp_ex_guess = 488.4 + 273.15
 
@@ -401,7 +394,7 @@ def print_net_electric(perf, scale, W_net_target_MW=5.0):
     print(f"  W_net thermo needed    : {W_net_thermo_target:.2f} kW")
     print(f"  m_dot_CO2 for {W_net_target_MW:.0f} MWe  : {scale_elec:.2f} kg/s")
     print(f"  Q_heater               : {Q_heater_elec:.3f} MW")
-    print(f"  eta net electrical     : {eta_net_elec*100:.2f}%  (manufacturer = 37.2%)")
+    #print(f"  eta net electrical     : {eta_net_elec*100:.2f}%  (manufacturer = 37.2%)")
     print("=================================")
     return scale_elec
 
@@ -436,7 +429,7 @@ if __name__ == "__main__":
     # Split ratio from PFD (Hanwha): m_dot_MC = 47.68, m_dot_total = 68.11 kg/s
     split_ratio = 47.68 / 68.11
 
-    T_hot_su     = 1000 + 273.15   # [K] 
+    T_hot_su     = 600 + 273.15   # [K] 
     T_salt_limit = 600 + 273.15   # [K]
 
     if T_hot_su <= T_salt_limit:
