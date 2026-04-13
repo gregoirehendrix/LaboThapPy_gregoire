@@ -248,6 +248,8 @@ class RecursiveCircuit(BaseCircuit):
         self.it_vars = []
         self.converged = False
         self.solving_order = []
+        self.print_flag = False   # ← 
+        self.plot_flag = False    # ←
 
     def set_source_properties(self, **kwargs):
         # Set properties for a specific source

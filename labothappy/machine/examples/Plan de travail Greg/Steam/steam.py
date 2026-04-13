@@ -40,7 +40,8 @@ from labothappy.component.heat_exchanger.hex_csteff_disc import HexCstEffDisc
 from labothappy.component.heat_exchanger.hex_cstpinch    import HexCstPinch
 from labothappy.component.pump.pump_csteff               import PumpCstEff
 
-
+import warnings
+warnings.filterwarnings('ignore')
 #%%
 # =============================================================================
 # SHARED HELPERS
@@ -585,17 +586,9 @@ def rankine_reheat(eta_pump, eta_turb,
         T_eva_su_new = sh.ex_H.T    # salt leaving SH → entering Eva
         T_eco_su_new = eva.ex_H.T   # salt leaving Eva → entering Eco
 
-        err = max(abs(T_eva_su_new - T_eva_su), abs(T_eco_su_new - T_eco_su))
         T_eva_su = T_eva_su_new
         T_eco_su = T_eco_su_new
 
-        if err < tol_outer:
-            print(f"  [RH outer loop] converged in {outer_iter + 1} iteration(s)  "
-                  f"(err={err:.4f} K)")
-            break
-    else:
-        print(f"  [RH outer loop] WARNING: did not converge after {max_outer} iterations "
-              f"(err={err:.4f} K)")
 
     return cycle, pump, eco, eva, sh, rh, turb_hp, turb_lp, condenser
 
@@ -614,7 +607,13 @@ def compute_cycle_performance_rh(pump, eco, eva, sh, rh, turb_hp, turb_lp, conde
     Q_boil  = Q_eco + Q_eva + Q_sh + Q_rh
     Q_cond  = m_dot * (condenser.su_H.h - condenser.ex_H.h) / 1000
     eta_th  = W_net / Q_boil
-    x_LP_ex = PropsSI('Q', 'H', turb_lp.ex.h, 'P', turb_lp.ex.p, 'Water')
+    h_lp = turb_lp.ex.h
+    p_lp = turb_lp.ex.p
+    h_sat_v = PropsSI('H', 'P', p_lp, 'Q', 1, 'Water')
+    if h_lp > h_sat_v:
+        x_LP_ex = 1.0 + (h_lp - h_sat_v) / h_sat_v  # indicateur superchauffe
+    else:
+        x_LP_ex = PropsSI('Q', 'H', h_lp, 'P', p_lp, 'Water')
     return {
         'W_pump': W_pump, 'W_HP': W_HP, 'W_LP': W_LP,
         'W_turb': W_turb, 'W_net': W_net,
@@ -700,7 +699,7 @@ if __name__ == "__main__":
     study_case   = "Reheat"    # "Simple" | "Superheated" | "Reheat"
     PRINT        = True
     DETAIL       = True
-    PRINT_SCALE  = True
+    PRINT_SCALE  = False
     W_net_target = 100         # [MW]
 
     # --- Component efficiencies ---
