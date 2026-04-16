@@ -196,7 +196,7 @@ def solve_reheat(eta_pump, eta_turb, eta_hx, pinch_hx, pinch_cond,
 # =============================================================================
 
 def compute_reheat_cfwh(pump, eco, eva, sh, rh, turb_hp, turb_lp, condenser,
-                         eta_pump, eta_turb, P_high, P_low, P_fw, P_s1, P_s2,
+                         eta_pump, eta_turb, P_high, P_low, P_fw, P_s1, P_s2, eta_g,
                          pinch_cfwh=5.0):
 
     h_lp_su   = rh.ex_C.h
@@ -268,6 +268,7 @@ def compute_reheat_cfwh(pump, eco, eva, sh, rh, turb_hp, turb_lp, condenser,
 
     eta_th      = W_net / Q_boil
     discrepancy = abs(W_net - (Q_boil - Q_cond))
+    eta_el = eta_g * eta_th
 
 
     return {
@@ -285,6 +286,7 @@ def compute_reheat_cfwh(pump, eco, eva, sh, rh, turb_hp, turb_lp, condenser,
         'W_turb': W_turb, 'W_net': W_net,
         'Q_boiler': Q_boiler, 'Q_rh': Q_rh, 'Q_boil': Q_boil,
         'Q_cond': Q_cond, 'eta_th': eta_th, 'discrepancy': discrepancy,
+        'eta_el': eta_el,
     }
 
 
@@ -358,6 +360,7 @@ def print_results(pump, eco, eva, sh, rh, turb_hp, turb_lp, condenser,
     print(f"  Q_boil     : {perf['Q_boil']:.2f} kW/(kg/s)")
     print(f"  Q_cond     : {perf['Q_cond']:.2f} kW/(kg/s)")
     print(f"  eta_th     : {perf['eta_th']*100:.2f} %")
+    print(f"  eta_el     : {perf['eta_el']*100:.2f} %")
     print(f"  --- First law check ---")
     print(f"  Q_boil - Q_cond : {perf['Q_boil'] - perf['Q_cond']:.4f} kW")
     print(f"  W_net           : {perf['W_net']:.4f} kW")
@@ -371,6 +374,7 @@ def print_results(pump, eco, eva, sh, rh, turb_hp, turb_lp, condenser,
 if __name__ == "__main__":
 
     # --- Paramètres machine (Siemens SST-PAC 700+900 DCRH) ---
+    eta_g = 0.986
     eta_pump   = 0.75
     eta_turb   = 0.85
     eta_hx     = 0.95
@@ -409,7 +413,7 @@ if __name__ == "__main__":
 
     print("Passe 2 : calcul analytique cFWH...")
     perf = compute_reheat_cfwh(pump, eco, eva, sh, rh, turb_hp, turb_lp, condenser,
-                                eta_pump, eta_turb, P_high, P_low, P_fw, P_s1, P_s2,
+                                eta_pump, eta_turb, P_high, P_low, P_fw, P_s1, P_s2, eta_g,
                                 pinch_cfwh=pinch_cfwh)
     print("  OK")
 
@@ -424,8 +428,9 @@ if __name__ == "__main__":
                  - (h_pump_ex - h_pump_su)) / 1000
     Q_boil_base = ((h_sh_ex - h_pump_ex) + (rh.ex_C.h - turb_hp.ex.h)) / 1000
     eta_base    = W_net_base / Q_boil_base
+    eta_base_el = eta_base*eta_g
 
     print(f"\n=== Comparaison ===")
-    print(f"  Reheat seul            : η = {eta_base*100:.2f} %  W_net = {W_net_base:.2f} kW/(kg/s)")
-    print(f"  Reheat + 2cFWH + DEA   : η = {perf['eta_th']*100:.2f} %  W_net = {perf['W_net']:.2f} kW/(kg/s)")
-    print(f"  Gain total             : {(perf['eta_th'] - eta_base)*100:+.2f} pp")
+    print(f"  Reheat seul            : η = {eta_base_el*100:.2f} %  W_net = {W_net_base:.2f} kW/(kg/s)")
+    print(f"  Reheat + 2cFWH + DEA   : η = {perf['eta_el']*100:.2f} %  W_net = {perf['W_net']:.2f} kW/(kg/s)")
+    print(f"  Gain total             : {(perf['eta_el'] - eta_base_el)*100:+.2f} pp")
