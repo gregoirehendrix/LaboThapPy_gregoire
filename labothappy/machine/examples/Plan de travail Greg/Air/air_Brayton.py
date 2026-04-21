@@ -452,10 +452,10 @@ if __name__ == "__main__":
 
     # ── Efficiencies ─────────────────────────
     eta_cp     = 0.80
-    eta_tb     = 0.90
-    eta_heater = 1.00
-    eta_recup  = 0.85
-    eta_cooler = 0.99
+    eta_tb     = 0.86
+    eta_heater = 0.9
+    eta_recup  = 0.80
+    eta_cooler = 0.90
 
     # ── Hot source ───────────────────────────
     T_hot_su     = 850 + 273.15   # [K]

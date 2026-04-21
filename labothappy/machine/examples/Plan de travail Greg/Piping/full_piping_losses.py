@@ -15,10 +15,10 @@ import math
 # =============================================================================
 
 INSULATION_MODE     = "rockwool_only"   # "silica+rockwool" or "rockwool_only"
-E_INSULATION_TOTAL  = 0.12              # m
+E_INSULATION_TOTAL  = 0.01              # m
 E_SILICA            = 0.020             # m (only used in silica+rockwool mode)
 E_ROCKWOOL          = E_INSULATION_TOTAL - E_SILICA
-LAMBDA_SILICA       = 0.017             # W/m·K
+LAMBDA_SILICA       = 0.040             # W/m·K 0.17
 LAMBDA_ROCKWOOL     = 0.040             # W/m·K
 H_EXT               = 10.0             # W/m²·K
 
@@ -438,7 +438,8 @@ if __name__ == "__main__":
     for nb, res in results_by_count.items():
         cnt = counts_summary[nb]
         print(f"  {f'{nb} units/PB':20s}  {cnt:6d}  "
-              f"{res['T_PB']-273.15:12.3f}  "
+              f"{res['T_PB']-273.15:12.1f}  "
               f"{T_HOT - res['T_PB']:8.3f}  "
               f"{res['total_Q']/1e6:12.4f}  "
               f"{res['piping_length']:10.1f}")
+

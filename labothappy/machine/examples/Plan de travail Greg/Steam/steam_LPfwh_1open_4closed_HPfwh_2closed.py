@@ -388,6 +388,7 @@ def compute_fwh(pump, eco, eva, sh, rh, turb_hp, turb_ic, cond,
     # Pression effective du condenseur Passe 1 (pour affichage comparatif)
     p_cond_p1 = cond.ex_H.p
     
+    """
     print(f"h_ic_ex _expand : {h_ic_ex:.1f}")
     print(f"turb_ic.ex.h    : {turb_ic.ex.h:.1f}")
     print(f"h_hp_ex  global-is : {h_hp_ex:.1f}")
@@ -495,6 +496,7 @@ def compute_fwh(pump, eco, eva, sh, rh, turb_hp, turb_ic, cond,
     Q_boil_total = (sh.ex_C.h - eco.su_C.h) / 1000  # boiler complet Passe 1
     print(f"Q_boil_total Passe1 : {Q_boil_total:.4f}")
     print(f"W_net + Q_cond      : {W_net + Q_cond:.4f}")
+    """
     
     
     return {
@@ -531,7 +533,7 @@ def compute_fwh(pump, eco, eva, sh, rh, turb_hp, turb_ic, cond,
 def print_results(pump, eco, eva, sh, rh, turb_hp, turb_ic, cond, perf, f_rh, P_low):
 
     def _row(label, T_C, p_bar, h):
-        print(f"  {label:<46} T={T_C:7.2f} °C   p={p_bar:7.3f} bar   h={h:10.1f} J/kg")
+        print(f"  {label:<30} T={T_C:7.2f} °C   p={p_bar:7.3f} bar   h={h:10.1f} J/kg")
 
     def _T(h, p):
         return PropsSI('T', 'H', h, 'P', p, 'Water') - 273.15
@@ -605,6 +607,26 @@ def print_results(pump, eco, eva, sh, rh, turb_hp, turb_ic, cond, perf, f_rh, P_
     print(f"  W_net           : {perf['W_net']:.5f} kW")
     print(f"  Ecart 1er principe  : {perf['discrepancy']:.3f} kW  ({perf['discrepancy']/perf['W_net']*100:.2f}% de W_net — lié à l'architecture deux passes)")
     print(f"  ==========================================")
+    
+    T_ret_boiler = eco.ex_H.T - 273.15
+    T_ret_rh     = rh.ex_H.T  - 273.15
+    m_boiler     = eco.ex_H.m_dot
+    m_rh         = rh.ex_H.m_dot
+    
+    # Mélange adiabatique pondéré en enthalpie (plus rigoureux que moyenne en T)
+    h_mix = (m_boiler * eco.ex_H.h + m_rh * rh.ex_H.h) / (m_boiler + m_rh)
+    # Inversion h → T via SolarSaltConnector
+    from labothappy.connector.solar_salt_connector import SolarSaltConnector
+    _c = SolarSaltConnector()
+    _c.set_properties(h=h_mix, p=2e5, m_dot=m_boiler + m_rh)
+    T_ret_mix = _c.T - 273.15
+    
+    print(f"\n=== Salt return temperatures ===")
+    print(f"  T_salt_su (hot tank)      : {T_salt_su - 273.15:7.2f} °C   ṁ = {m_boiler + m_rh:6.2f} kg/s")
+    print(f"  T_salt_ex boiler (Eco:ex_H): {T_ret_boiler:7.2f} °C   ṁ = {m_boiler:6.2f} kg/s")
+    print(f"  T_salt_ex RH     (RH:ex_H) : {T_ret_rh:7.2f} °C   ṁ = {m_rh:6.2f} kg/s")
+    print(f"  T_salt_return (cold tank) : {T_ret_mix:7.2f} °C   (mélange enthalpique)")
+    print(f"  ΔT hot→cold               : {T_salt_su - 273.15 - T_ret_mix:7.2f} °C")
 
 
 # =============================================================================
@@ -615,8 +637,8 @@ if __name__ == "__main__":
 
     # --- Isentropic efficiencies & HX parameters ---
     eta_g      = 0.986
-    eta_pump   = 0.75
-    eta_turb   = 0.85
+    eta_pump   = 0.8
+    eta_turb   = 0.93
     eta_hx     = 0.95
     pinch_hx   = 5.0
     pinch_cond = 5.0
@@ -637,11 +659,11 @@ if __name__ == "__main__":
     P_lp1    =   0.44e5  # FWH1
 
     # --- Operating conditions ---
-    f_rh           = 0.10          # fraction of salt to reheater
-    m_dot_st       = 1.0           # normalised steam flow [kg/s]
-    T_salt_su      = 558.289 + 273.15
+    f_rh           = 0.20          # fraction of salt to reheater
+    m_dot_st       = 1           # normalised steam flow [kg/s]
+    T_salt_su      = 565 + 273.15
     P_salt         = 2e5
-    m_dot_salt_tot = 100 * 5.99    # total salt flow [kg/s]
+    m_dot_salt_tot = 9.2    # total salt flow [kg/s]
 
     CSource = MassConnector()
     CSource.set_properties(fluid='Water', T=20+273.15, P=3e5, m_dot=100.0)

@@ -314,7 +314,7 @@ def plot_network(blue_pos, sol, DIST, M):
 
 def print_clusters_visual(clusters, mapping):
 
-    print("\n=== Groupings ===")
+    #print("\n=== Groupings ===")
 
     result = []
     for hub_int, members_int in clusters.items():
@@ -362,7 +362,7 @@ if __name__ == "__main__":
 
     print("\nTotal piping length :", sol["cost"], 'm')
     print("Average piping length per unit :", sol["cost"] / nb, 'm')
-    print("RMS piping length per branch   :", rms, 'm')
+    #print("RMS piping length per branch   :", rms, 'm')
 
     print_clusters_visual(sol["clusters"], mapping)
 
