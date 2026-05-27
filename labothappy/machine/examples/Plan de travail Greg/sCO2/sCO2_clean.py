@@ -180,7 +180,7 @@ def sco2_cycle(T_hot=600.0, m_dot=1.0, split=SPLIT, verbose=False):
     if verbose:
         print(f"sCO2 @ T_hot={T_hot:.1f}°C, m_dot={m_dot:.3f} kg/s [Hanwha ~68 kg/s], split={split:.3f}")
         print(f"  η_thermo   = {eta*100:.2f}%")
-        print(f"  η_net_elec = {eta_net_elec*100:.2f}% [Hanwha 37.2%]")
+        print(f"  η_net_elec = {eta_net_elec*100-1:.2f}% [Hanwha 37.2%]")
         print(f"  W_net      = {W_net:.1f} kW")
         print(f"  W_net_elec = {W_net_elec:.1f} kW")
         print(f"  Q_heater   = {Q_heater:.1f} kW")
@@ -199,11 +199,25 @@ def sco2_cycle(T_hot=600.0, m_dot=1.0, split=SPLIT, verbose=False):
         'T_mix': T_mx, 'T_rc': T_rc,
     }
 
-
+"""
 # ─────────────────────────────────────────────
 # Standalone test (validation vs Hanwha PFD)
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
     # Validation: find m_dot that gives 5 MWe net electrical (Hanwha design point)
     r = sco2_cycle(T_hot=600, m_dot=71.896, verbose=True)
-    print(f"\nExpected (Hanwha): η_net_elec = 37.2%, W_net_elec = 5000 kW")
+    print(f"\nExpected (Hanwha): η_net_elec = 37.2%, W_net_elec = 5000 kW")"""
+    
+if __name__ == "__main__":
+    r = sco2_cycle(T_hot=565, m_dot=1.0)
+
+    from CoolProp.CoolProp import PropsSI
+    s_in  = PropsSI('S','T',r['T5']+273.15,'P', 86.7e5,'CO2')/1e3
+    s_out = PropsSI('S','T',r['T_rc']+273.15,'P',223.0e5,'CO2')/1e3
+
+    print(f"T_rc du modèle   = {r['T_rc']:.2f}°C  (diagram: 147.10°C ?)")
+    print(f"T11 (LTR cold)   = {r['T11']:.2f}°C")
+    print(f"T_mix            = {r['T_mix']:.2f}°C")
+    print(f"s_in (86.7 bar)  = {s_in:.4f} kJ/kg·K")
+    print(f"s_out (223 bar)  = {s_out:.4f} kJ/kg·K")
+    print(f"Δs = {s_out - s_in:.4f}  {'✓ 2e loi OK' if s_out > s_in else '✗ violation'}")

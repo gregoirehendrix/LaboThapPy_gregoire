@@ -1,9 +1,3 @@
-# ============================================================
-#   OPEN AIR BRAYTON — sCO2 style
-#   Simple | Recuperated | Recuperated + Reheat + Intercooling
-# ============================================================
-
-#%%
 import numpy as np
 from CoolProp.CoolProp import PropsSI
 
@@ -15,10 +9,6 @@ from labothappy.component.compressor.compressor_csteff import CompressorCstEff
 from labothappy.component.expander.expander_csteff     import ExpanderCstEff
 from labothappy.component.heat_exchanger.hex_csteff    import HexCstEff
 
-
-# ─────────────────────────────────────────────
-#   CYCLE BUILDERS
-# ─────────────────────────────────────────────
 
 #%%
 def brayton_simple(eta_cp, eta_tb, eta_heater,
@@ -122,18 +112,7 @@ def brayton_recuperated(eta_cp, eta_tb, eta_heater, eta_recup,
 def brayton_recuperated_rh_ic(eta_cp, eta_tb, eta_heater, eta_recup, eta_cooler,
                                HSource_heater, HSource_reheater, AirInlet, CSource,
                                P_low, P_high, P_mid, T_tb_su_guess):
-    """
-    Recuperated Brayton with 1 reheat + 1 intercooling.
 
-    Layout:
-      AirInlet → Comp1 → Intercooler → Comp2 → Recuperator(C) → Heater
-               → Turb1 → Reheater   → Turb2 → Recuperator(H) → exhaust
-
-    Pressures:
-      P_low  : Comp1 inlet  / Turb2 outlet
-      P_mid  : Comp1 outlet / Turb1 outlet  (= sqrt(P_low × P_high))
-      P_high : Comp2 outlet / Turb1 inlet
-    """
     cycle       = RecursiveCircuit('Air')
     comp1       = CompressorCstEff()
     comp2       = CompressorCstEff()
@@ -241,9 +220,7 @@ def brayton_recuperated_rh_ic(eta_cp, eta_tb, eta_heater, eta_recup, eta_cooler,
     return cycle, comp1, comp2, turb1, turb2, heater, reheater, recuperator, intercooler
 
 
-# ─────────────────────────────────────────────
-#   PERFORMANCE
-# ─────────────────────────────────────────────
+
 
 #%%
 def compute_cycle_performance(compressor, turbine, heater,
@@ -308,9 +285,6 @@ def compute_cycle_performance(compressor, turbine, heater,
     return result
 
 
-# ─────────────────────────────────────────────
-#   PRINT HELPERS
-# ─────────────────────────────────────────────
 
 #%%
 def print_states(compressor, turbine,
@@ -428,9 +402,6 @@ def scale_to_power(W_net_target_MW, perf, PRINT_SCALE=True, First_Law_Check=Fals
     return scale
 
 
-# ─────────────────────────────────────────────
-#   MAIN
-# ─────────────────────────────────────────────
 
 #%%
 if __name__ == "__main__":
@@ -440,25 +411,25 @@ if __name__ == "__main__":
     DETAIL          = True
     PRINT_SCALE     = True
     First_Law_Check = False
-    W_net_target    = 5                    # [MW]
+    W_net_target    = 0.2                    # [MW]
 
     # ── Operating conditions ─────────────────
     T_amb     = 13.2 + 273.15   # [K]
     P_low     = 1.01325e5       # [Pa]
-    PR        = 4
+    PR        = 5
     P_high    = P_low * PR
     P_mid     = np.sqrt(P_low * P_high)   # optimal intermediate pressure [Pa]
     m_dot_air = 1.0             # [kg/s] reference
 
     # ── Efficiencies ─────────────────────────
-    eta_cp     = 0.80
-    eta_tb     = 0.86
-    eta_heater = 0.9
-    eta_recup  = 0.80
-    eta_cooler = 0.90
+    eta_cp     = 0.75
+    eta_tb     = 0.85
+    eta_heater = 0.90
+    eta_recup  = 0.85
+    eta_cooler = 0.95
 
     # ── Hot source ───────────────────────────
-    T_hot_su     = 850 + 273.15   # [K]
+    T_hot_su     = 1000 + 273.15   # [K]
     T_salt_limit = 565 + 273.15   # [K]
     P_hot        = 1e5            # [Pa]
 
@@ -538,3 +509,86 @@ if __name__ == "__main__":
                              intercooler=intercooler, reheater=reheater)
             print_efficiency(perf, First_Law_Check)
         scale_to_power(W_net_target, perf, PRINT_SCALE, First_Law_Check)
+
+"""
+import pandas as pd
+
+if __name__ == "__main__":
+
+    # ── Sweep variables ──────────────────────
+    PR_values      = [3, 3.7567, 4.4373, 4.8853, 5]
+    T_hot_values_C = np.arange(600, 1001, 50)
+
+    # ── Fixed parameters ─────────────────────
+    T_amb     = 13.2 + 273.15
+    P_low     = 1.01325e5
+    m_dot_air = 1.0
+
+    eta_cp     = 0.75
+    eta_tb     = 0.85
+    eta_heater = 0.90
+
+    T_salt_limit = 565 + 273.15
+    P_hot        = 1e5
+
+    AirInlet = MassConnector()
+    AirInlet.set_properties(fluid='Air', T=T_amb, P=P_low, m_dot=m_dot_air)
+
+    # ── Sweep ────────────────────────────────
+    results = []
+
+    for PR in PR_values:
+        P_high = P_low * PR
+
+        for T_hot_C in T_hot_values_C:
+            T_hot_su = T_hot_C + 273.15
+
+            if T_hot_su <= T_salt_limit:
+                HSource   = SolarSaltConnector()
+                HSource.set_properties(T=T_hot_su, p=P_hot, m_dot=1.0)
+                hot_fluid = 'SolarSalt'
+            else:
+                HSource   = MassConnector()
+                HSource.set_properties(fluid='Air', T=T_hot_su, p=P_hot, m_dot=1.0)
+                hot_fluid = 'Air'
+
+            try:
+                cycle, comp, turb, heater = brayton_simple(
+                    eta_cp, eta_tb, eta_heater,
+                    HSource, AirInlet, P_low, P_high
+                )
+                perf = compute_cycle_performance(
+                    comp, turb, heater, hot_fluid, T_hot_su, P_hot
+                )
+                results.append({
+                    'PR':      round(PR, 4),
+                    'T_hot_C': T_hot_C,
+                    'T_exh_C': perf['T_exhaust'] - 273.15,
+                    'eta_%':   perf['eta'] * 100,
+                })
+                print(f"PR={PR:.4f} | T={T_hot_C}°C | {hot_fluid:9s} | "
+                      f"T_exh={perf['T_exhaust'] - 273.15:.2f} °C | "
+                      f"eta={perf['eta']*100:.2f} %")
+
+            except Exception as e:
+                print(f"PR={PR:.4f} | T={T_hot_C}°C | FAILED: {e}")
+                results.append({
+                    'PR':      round(PR, 4),
+                    'T_hot_C': T_hot_C,
+                    'T_exh_C': np.nan,
+                    'eta_%':   np.nan,
+                })
+
+    # ── Pivots ───────────────────────────────
+    df = pd.DataFrame(results)
+
+    for col, label in [
+        ('T_exh_C', 'T_exhaust [°C]'),
+        ('eta_%',   'η Brayton simple [%]'),
+    ]:
+        pivot = df.pivot(index='T_hot_C', columns='PR', values=col)
+        print(f"\n=== {label} (rows = T_hot [°C], cols = PR) ===")
+        print(pivot.round(2).to_string())
+
+    df.to_csv('brayton_simple_sweep.csv', index=False)
+    print("\nSaved to brayton_simple_sweep.csv")"""

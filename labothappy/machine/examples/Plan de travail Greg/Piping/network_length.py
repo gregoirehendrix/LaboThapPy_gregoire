@@ -2,8 +2,26 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import os
 
 # CLASSE OPTIMISATEUR
+plt.close("all")
+plt.rcParams.update({
+    'font.size'        : 28,
+    'axes.labelsize'   : 28,
+    'xtick.labelsize'  : 24,
+    'ytick.labelsize'  : 24,
+    'legend.fontsize'  : 22,
+})
+
+SAVE_DIR = (r"C:\Users\gregoire.hendrix@johncockerill.com"
+            r"\OneDrive - John Cockerill\Documents\Cockerill"
+            r"\Images\3. Thermodynamic analysis\1. Piping")
+os.makedirs(SAVE_DIR, exist_ok=True)
+
+# Chemin complet du fichier PDF
+save_path = os.path.join(SAVE_DIR, "layout.pdf")
+
 
 class CSPOptimizerRows:
     def __init__(self, DIST, CAP):
@@ -258,55 +276,70 @@ def make_visual_mapping(blue_pos):
 
 def plot_network(blue_pos, sol, DIST, M):
 
-    parent = sol["parent"]
-    coords = sol["coords"]
+    parent  = sol["parent"]
+    coords  = sol["coords"]
     clusters = sol["clusters"]
-    hubs = set(clusters.keys())
+    hubs    = set(clusters.keys())
 
-    fig, ax = plt.subplots(figsize=(13, 13))
+    # --- Translation : PB devient l'origine (0, 0) ---
+    xpb_orig, ypb_orig = coords[0]
+    def translate(x, y):
+        return x - xpb_orig, y - ypb_orig
+
+    fig, ax = plt.subplots(figsize=(10, 10))
     ax.set_aspect("equal")
 
     blue_for_display, internal_to_visual = make_visual_mapping(blue_pos)
 
     for display_id, (internal_id, (r, c)) in enumerate(blue_for_display, start=1):
-
-        x = c * DIST
-        y = r * DIST
+        x_raw = c * DIST
+        y_raw = r * DIST
+        x, y  = translate(x_raw, y_raw)
 
         if internal_id in hubs:
             edge = "#FFD700"
-            lw = 3
+            lw   = 2
         else:
-            edge = "black"
-            lw = 0.7
+            edge = "white"
+            lw   = 0.5
 
         ax.add_patch(Rectangle((x, y), DIST, DIST,
-                               facecolor="#0B3D91", edgecolor=edge, linewidth=lw))
-        ax.text(x + DIST/2, y + DIST/2,
-                str(display_id),
-                ha="center", va="center", color="white")
+                                facecolor="#0B3D91", edgecolor=edge, linewidth=lw))
+        # Pas de label texte
 
+    # Power block à (0, 0)
     PB_SIZE = 0.3 * DIST
-    xpb, ypb = coords[0]
     ax.add_patch(Rectangle(
-        (xpb + (DIST-PB_SIZE)/2, ypb + (DIST-PB_SIZE)/2),
-        PB_SIZE, PB_SIZE, facecolor="red", edgecolor="black", linewidth=2
+        ((DIST - PB_SIZE) / 2, (DIST - PB_SIZE) / 2),
+        PB_SIZE, PB_SIZE,
+        facecolor="red", edgecolor="black", linewidth=2
     ))
 
+    # Connexions
     for b, p in parent.items():
-        bx, by = coords[b]
-        px, py = coords[p]
+        bx, by = translate(*coords[b])
+        px, py = translate(*coords[p])
 
-        bx += DIST/2; by += DIST/2
-        px += DIST/2; py += DIST/2
+        bx += DIST / 2;  by += DIST / 2
+        px += DIST / 2;  py += DIST / 2
 
-        ax.plot([bx, px], [by, by], color="gray", linewidth=2)
-        ax.plot([px, px], [by, py], color="gray", linewidth=2)
+        ax.plot([bx, px], [by, by], color="gray", linewidth=1.2)
+        ax.plot([px, px], [by, py], color="gray", linewidth=1.2)
 
-    ax.set_xlim(0, M*DIST)
-    ax.set_ylim(0, M*DIST)
+    # Légende
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor="#0B3D91", edgecolor="white",      label="Solar unit"),
+        Patch(facecolor="#0B3D91", edgecolor="#FFD700", linewidth=2, label="Hub unit"),
+        Patch(facecolor="red",     edgecolor="black",       label="Power block"),
+    ]
+    ax.legend(handles=legend_elements, loc="upper right")
+
+    ax.set_xlabel("Distance from power block [m]")
+    ax.set_ylabel("Distance from power block [m]")
     ax.grid(True, alpha=0.3)
-
+    plt.tight_layout()
+    plt.savefig(save_path, format="pdf", bbox_inches="tight", dpi=300)
     plt.show()
 
     return internal_to_visual
