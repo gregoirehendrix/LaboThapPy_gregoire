@@ -72,17 +72,11 @@ for st, col in zip(storage_curves, colors):
             label=f'{st} MWh unit$^{{-1}}$')
     ax.scatter(SM_vals, y, color=col, s=60, zorder=5)
 
-# Optimum star
-ax.scatter(SM_opt, LCOE_opt, color='green', s=350, zorder=7,
-           marker='*', edgecolors='black', linewidths=0.8,
-           label=f'Optimum: {LCOE_opt:.1f} €/MWh\n'
-                 f'(SM = {SM_opt}, {ST_opt} MWh unit$^{{-1}}$)')
-
 ax.set_xlabel('Solar multiple  $SM$  [--]')
-ax.set_ylabel(r'LCOE  [€ MWh$^{-1}$]')
+ax.set_ylabel(r'LCOE  [€/MWh]')
 ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
-ax.legend(title='Storage capacity', loc='upper right', fontsize=18)
+ax.legend(title='Storage capacity', loc='best', fontsize=18)
 ax.set_xlim(1.5, 5.0)
 fig.tight_layout()
 path = os.path.join(SAVE_DIR, "fig_LCOE_lineplot_steam.pdf")
@@ -106,7 +100,7 @@ pcm = ax.pcolormesh(ST_grid_f, SM_grid_f, LCOE_fine,
                     vmin=LCOE.min(), vmax=LCOE.max())
 
 cbar = fig.colorbar(pcm, ax=ax, pad=0.02)
-cbar.set_label(r'LCOE  [€ MWh$^{-1}$]', fontsize=24)
+cbar.set_label(r'LCOE  [€/MWh]', fontsize=24)
 cbar.ax.tick_params(labelsize=20)
 
 # Contour lines on fine grid
@@ -119,11 +113,11 @@ ax.scatter(ST_opt, SM_opt, color='white', s=400, zorder=7,
            marker='*', edgecolors='black', linewidths=1.0,
            label=f'Optimum: {LCOE_opt:.1f} €/MWh')
 
-ax.set_xlabel(r'Storage capacity  [MWh unit$^{-1}$]')
+ax.set_xlabel(r'Storage capacity  [MWh/unit]')
 ax.set_ylabel('Solar multiple  $SM$  [--]')
 ax.xaxis.set_major_locator(ticker.MultipleLocator(4))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
-ax.legend(loc='upper left', fontsize=20)
+ax.legend(loc='best', fontsize=20)
 fig.tight_layout()
 path = os.path.join(SAVE_DIR, "fig_LCOE_heatmap_steam.pdf")
 fig.savefig(path, bbox_inches='tight')

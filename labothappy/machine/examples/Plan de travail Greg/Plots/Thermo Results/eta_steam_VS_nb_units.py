@@ -45,14 +45,15 @@ eta_ref = eta_list[N_REF - 5]
 eta_smooth = savgol_filter(eta_list, window_length=21, polyorder=2)
 
 C_MAIN = '#1f77b4'
-C_REF  = '#2ca02c'
+C_REF  = '#ff7f0e'
 
 fig, ax = plt.subplots(figsize=(14, 10))
 
-ax.plot(nb_list, eta_smooth, color=C_MAIN, linewidth=2.5, label='Rankine efficiency')
-#ax.scatter([N_REF], [eta_ref], marker='*', color=C_REF, s=350, zorder=6, label=f'Reference point (N = {N_REF}, $\\eta$ = {eta_ref:.2f}%)')
-ax.axvline(x=N_REF, color=C_REF, linestyle=':', linewidth=1.5, alpha=0.7, label = f'Reference point (N = {N_REF}, $\\eta$ = {eta_ref:.2f}%)')
-
+ax.plot(nb_list, eta_smooth, color=C_MAIN, lw=2.5, ms=8,
+        markevery=25, label='Rankine efficiency')
+ax.scatter([N_REF], 45.605, marker='o', color=C_REF, s=150,
+           edgecolors=C_REF, linewidths=2.5, zorder=6,
+           label=f'Reference point ($N$ = {N_REF}, $\\eta$ = {eta_ref:.2f}%)')
 ax.set_xlabel(r'Number of solar units $N$ [-]')
 ax.set_ylabel(r'Rankine efficiency $\eta$ [%]')
 ax.set_xlim(0, 155)
@@ -60,7 +61,7 @@ ax.set_ylim(45.5, 45.8)
 ax.legend(loc='upper right')
 ax.xaxis.set_major_locator(ticker.MultipleLocator(25))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v:.2f}%'))
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v:.2f}'))
 
 fig.tight_layout()
 path = os.path.join(SAVE_DIR, 'fig_steam_vs_N.pdf')

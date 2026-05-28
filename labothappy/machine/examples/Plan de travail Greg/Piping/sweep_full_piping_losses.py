@@ -82,8 +82,7 @@ def save_fig(filename):
 
 # --- Figure 1 : Piping length ---
 fig, ax = plt.subplots(figsize=(14, 10))
-#ax.plot(nb_list, length_list,  color='steelblue', linewidth=1,   alpha=0.2)
-ax.plot(nb_list, length_smooth, color='steelblue', linewidth=2.5)
+ax.plot(nb_list, length_smooth, color="#1f77b4", lw=2.5, ms=8, markevery=10)
 ax.set_xlabel("Number of solar units [-]")
 ax.set_ylabel("Total piping length [m]")
 ax.grid(True, alpha=0.3)
@@ -91,8 +90,7 @@ save_fig("sweep_1D_length.pdf")
 
 # --- Figure 2 : Thermal losses ---
 fig, ax = plt.subplots(figsize=(14, 10))
-#ax.plot(nb_list, Q_list,   color='firebrick', linewidth=1,   alpha=0.2)
-ax.plot(nb_list, Q_smooth, color='firebrick', linewidth=2.5)
+ax.plot(nb_list, Q_smooth, color="#1f77b4", lw=2.5, ms=8, markevery=10)
 ax.set_xlabel("Number of solar units [-]")
 ax.set_ylabel("Total heat losses [MW]")
 ax.grid(True, alpha=0.3)
@@ -100,8 +98,7 @@ save_fig("sweep_1D_Qloss.pdf")
 
 # --- Figure 3 : Temperature drop ---
 fig, ax = plt.subplots(figsize=(14, 10))
-#ax.plot(nb_list, dT_list,  color='darkorange', linewidth=1,   alpha=0.2)
-ax.plot(nb_list, dT_smooth, color='darkorange', linewidth=2.5)
+ax.plot(nb_list, dT_smooth, color="#1f77b4", lw=2.5, ms=8, markevery=10)
 ax.set_xlabel("Number of solar units [-]")
 ax.set_ylabel(r"Temperature drop at PB inlet $\Delta T$ [K]")
 ax.grid(True, alpha=0.3)

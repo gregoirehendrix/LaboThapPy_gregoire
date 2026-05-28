@@ -765,7 +765,3 @@ if __name__ == "__main__":
     print(df_eta.to_string())
     print("\n=== W_net vapeur [kW / kg_steam/s] (rows=T_hot [°C], cols=PR) ===")
     print(df_wnet.to_string())
-
-    df_eta.to_csv('steam_eta_sweep.csv')
-    df_wnet.to_csv('steam_wnet_sweep.csv')
-    print("\nSauvegardés dans steam_eta_sweep.csv et steam_wnet_sweep.csv")

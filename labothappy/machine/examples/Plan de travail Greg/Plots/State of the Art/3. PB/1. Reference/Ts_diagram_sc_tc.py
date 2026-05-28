@@ -12,14 +12,16 @@ from matplotlib.lines import Line2D
 from CoolProp.CoolProp import PropsSI
 import os
 
+
+factor = 1.4
 # ── Style ──────────────────────────────────────────────────────────────────
 plt.rcParams.update({
     'font.family'        : 'serif',
-    'font.size'          : 28,
-    'axes.labelsize'     : 28,
-    'xtick.labelsize'    : 20,
-    'ytick.labelsize'    : 24,
-    'legend.fontsize'    : 18,
+    'font.size'          : 28*factor,
+    'axes.labelsize'     : 28*factor,
+    'xtick.labelsize'    : 20*factor,
+    'ytick.labelsize'    : 24*factor,
+    'legend.fontsize'    : 18*factor,
     'figure.dpi'         : 150,
     'axes.grid'          : True,
     'grid.alpha'         : 0.25,
@@ -32,7 +34,7 @@ SAVE_DIR    = r"C:\Users\gregoire.hendrix@johncockerill.com\OneDrive - John Cock
 
 fluid      = "Water"
 transcritic = True
-font_graph  = 28   # for zone annotations
+font_graph  = 28*factor   # for zone annotations
 
 if transcritic:
     # ============================================================
@@ -190,7 +192,7 @@ if transcritic:
     ax.grid(True, linestyle=":", alpha=0.4)
 
     plt.tight_layout()
-    plt.savefig(os.path.join(SAVE_DIR, "rankine_Ts_tc.pdf"), dpi=150, bbox_inches="tight")
+    plt.savefig(os.path.join(SAVE_DIR, "rankine_Ts_tc.pdf"), dpi=150)
     plt.show()
 
 

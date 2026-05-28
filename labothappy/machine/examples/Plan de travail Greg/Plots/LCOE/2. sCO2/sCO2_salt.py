@@ -136,7 +136,7 @@ pcm = ax.pcolormesh(ST_grid, SM_grid, LCOE_fine,
                     vmin=LCOE.min(), vmax=LCOE.max())
 
 cbar = fig.colorbar(pcm, ax=ax, pad=0.02)
-cbar.set_label(r'LCOE  [€ MWh$^{-1}$]', fontsize=24)
+cbar.set_label(r'LCOE  [€/MWh]', fontsize=24)
 cbar.ax.tick_params(labelsize=20)
 
 contours = ax.contour(ST_grid, SM_grid, LCOE_fine,
@@ -146,9 +146,9 @@ ax.clabel(contours, inline=True, fontsize=14, fmt='%.0f')
 ax.scatter(ST_opt, SM_opt, color='white', s=400, zorder=7,
            marker='*', edgecolors='black', linewidths=1.0,
            label=f'Optimum: {LCOE_opt:.1f} €/MWh\n'
-                 f'(SM = {SM_opt}, {ST_opt} MWh unit$^{{-1}}$)')
+                 f'(SM = {SM_opt}, {ST_opt} MWh/unit)')
 
-ax.set_xlabel(r'Storage capacity  [MWh unit$^{-1}$]')
+ax.set_xlabel(r'Storage capacity  [MWh/unit]')
 ax.set_ylabel('Solar multiple  $SM$  [--]')
 ax.xaxis.set_major_locator(ticker.MultipleLocator(4))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))

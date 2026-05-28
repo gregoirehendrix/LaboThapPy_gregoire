@@ -91,7 +91,7 @@ eta_ref = np.interp(T_ref, T_ok, eta_ok) if T_ok else None
 
 # --- Plot ---
 C_MAIN = '#1f77b4'
-C_FAIL = '#d62728'
+C_FAIL = '#ff7f0e'
 C_REF  = '#2ca02c'
 
 fig, ax = plt.subplots(figsize=(14, 10))
@@ -99,16 +99,13 @@ fig, ax = plt.subplots(figsize=(14, 10))
 ax.plot(T_ok, eta_ok, '-o', color=C_MAIN, markersize=6,
         linewidth=2.5, label='Converged solutions')
 
-if T_fail:
-    ax.scatter(T_fail, [None] * len(T_fail), marker='x', color=C_FAIL,
-               s=120, linewidths=2.5, label='Failed to converge', zorder=5)
+
 
 if T_ok:
     T_thresh = T_ok[0]
-    ax.axvline(x=T_thresh, color=C_FAIL, linestyle='--', linewidth=1.5, alpha=0.7)
-    ax.text(T_thresh + 3, min(eta_ok) - 0.3,
-            fr'Convergence threshold $\approx {T_thresh:.0f}\,°C$',
-            color=C_FAIL, fontsize=18)
+    ax.scatter([T_thresh], [eta_ok[0]], marker='o', color=C_FAIL,
+               s=150, zorder=6,
+               label=fr'Convergence threshold ($T \approx {T_thresh:.0f}\,°C$)')
 """
 if eta_ref is not None:
     ax.scatter([T_ref], [eta_ref], marker='*', color=C_REF,
@@ -122,7 +119,7 @@ ax.set_xlim(340, 660)
 ax.legend(loc='upper left')
 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v:.0f}%'))
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v:.0f}'))
 
 fig.tight_layout()
 path = os.path.join(SAVE_DIR, 'fig_steam_TIT.pdf')

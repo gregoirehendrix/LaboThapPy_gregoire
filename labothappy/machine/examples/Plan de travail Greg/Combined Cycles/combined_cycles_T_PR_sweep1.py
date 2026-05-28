@@ -29,6 +29,7 @@ from scipy.optimize import fsolve
 from CoolProp.CoolProp import PropsSI
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.ticker as ticker
 import os
 
 from labothappy.machine.circuit_it   import IterativeCircuit
@@ -1463,7 +1464,7 @@ if __name__ == "__main__":
     # ── T-Q diagramme ────────────────────────────────────────────────
     plot_TQ_steam_generator(T_hot_C=800, PR=3.7567)
 
-    # ── FIGURE FINALE : gain vs T_hot (STYLE LOCAL) ───────────────────
+    # ── FIGURE FINALE : gain vs T_hot (STYLE ORC/STEAM matching) ────
     with plt.rc_context({
         "font.family"     : "serif",
         "font.size"       : 28,
@@ -1476,15 +1477,22 @@ if __name__ == "__main__":
         "grid.alpha"      : 0.3,
         "grid.linestyle"  : "--",
     }):
+        STEAM_COLORS  = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+        STEAM_MARKERS = ["o", "s", "^", "D", "v"]
+
         fig, ax = plt.subplots(figsize=(14, 10))
 
-        for pr, grp in df.groupby('PR'):
-            ax.plot(grp['T_hot_C'], grp['gain_pp'],lw=2.5, label=f'PR={pr:.2f}')
+        for (pr, grp), col, mk in zip(df.groupby('PR'), STEAM_COLORS, STEAM_MARKERS):
+            ax.plot(grp['T_hot_C'], grp['gain_pp'],
+                    color=col, lw=2.5, marker=mk, ms=8,
+                    label=f'PR={pr:.2f}', zorder=3)
 
         ax.set_xlabel(r'Hot source temperature $T_{\mathrm{hot,in}}$ [°C]')
-        ax.set_ylabel('Efficiency gain η [pp]')
-        
-        ax.legend()
+        ax.set_ylabel(r'Efficiency gain $\Delta\eta$ [pp]')
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
+        ax.legend(loc="upper left", fontsize=19, ncol=2)
+        fig.tight_layout()
 
         path = os.path.join(SAVE_DIR, "air_steam_gain_PP_VS_T_hot.pdf")
         fig.savefig(path, bbox_inches='tight')

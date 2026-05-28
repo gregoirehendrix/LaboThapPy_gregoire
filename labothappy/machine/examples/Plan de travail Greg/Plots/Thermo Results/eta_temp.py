@@ -196,13 +196,13 @@ AIR_STEAM = np.array([
 
 # Sequential palette for power levels (used in families of curves)
 # 5 shades from light to dark
-POWER_COLORS_AIR  = ["#aec6e8", "#6baed6", "#3182bd", "#1a5494", "#08306b"]
+POWER_COLORS_AIR  = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 POWER_LABELS_AIR  = ["0.2 MW", "0.5 MW", "1 MW", "2 MW", "5 MW"]
 
-POWER_COLORS_STEAM = ["#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#8c2d04"]
+POWER_COLORS_STEAM = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 POWER_LABELS_STEAM = ["4 MW", "25 MW", "50 MW", "100 MW"]
 
-"""# ════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 # FIGURE 1 — Steam Rankine : η vs electrical power output
 # ════════════════════════════════════════════════════════════════════════════
 print("Generating Fig 1 — Steam scaling …")
@@ -221,9 +221,9 @@ ax.set_xlim(0, 115)
 ax.set_ylim(35, 49)
 ax.xaxis.set_major_locator(ticker.MultipleLocator(25))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
-ax.legend(loc="lower right")
+ax.legend(loc="best")
 fig.tight_layout()
-#save(fig, "fig_steam_scaling.pdf")"""
+#save(fig, "fig_steam_scaling.pdf")
 
 # ════════════════════════════════════════════════════════════════════════════
 # FIGURE 2 — Air Brayton : η vs TIT, one line per power level
@@ -248,11 +248,11 @@ ax.set_xlabel(r"Turbine inlet temperature  $T_\mathrm{IT}$  [°C]")
 ax.set_ylabel(r"Thermal efficiency  $\eta$  [%]")
 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
-ax.legend(loc="upper left", fontsize=20, ncol=2)
+ax.legend(loc="best", fontsize=20, ncol=2)
 fig.tight_layout()
 #save(fig, "fig_air_brayton_TIT.pdf")
 
-"""# ════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 # FIGURE 3 — sCO₂ recompression : η vs TIT
 # ════════════════════════════════════════════════════════════════════════════
 print("Generating Fig 3 — sCO2 η vs TIT …")
@@ -270,9 +270,10 @@ ax.set_xlabel(r"Turbine inlet temperature  $T_\mathrm{IT}$  [°C]")
 ax.set_ylabel(r"Thermal efficiency  $\eta$  [%]")
 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
-ax.legend(loc="upper left")
+ax.legend(loc="best")
 fig.tight_layout()
-save(fig, "fig_sco2_TIT.pdf")"""
+save(fig, "fig_sco2_TIT.pdf")
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # FIGURE 4 — Air + ORC : η_total vs TIT  (ORC = 5 MW, lines per top power)
@@ -281,7 +282,7 @@ save(fig, "fig_sco2_TIT.pdf")"""
 print("Generating Fig 4 — Air+ORC η_total vs TIT …")
 
 # Qualitative palette (distinct hues, not a blue ramp) + per-curve markers
-ORC_TOP_COLORS  = ["#1f77b4", "#2ca02c", "#9467bd", "#ff7f0e", "#08306b"]
+ORC_TOP_COLORS  = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 ORC_TOP_MARKERS = ["o", "s", "^", "D", "v"]
 
 fig, ax = plt.subplots(figsize=(14, 10))
@@ -309,34 +310,46 @@ ax.set_xlabel(r"Turbine inlet temperature  $T_\mathrm{IT}$  [°C]")
 ax.set_ylabel(r"Total thermal efficiency  $\eta_\mathrm{total}$  [%]")
 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
-ax.legend(loc="upper left", fontsize=19, ncol=2)
+ax.legend(loc="best", fontsize=19, ncol=2)
 fig.tight_layout()
 save(fig, "fig_air_orc_TIT.pdf")
 
-"""# ════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 # FIGURE 5 — Air + Steam : η_total vs TIT  (Steam = 100 MW, lines per top power)
+# Qualitative palette + distinct markers, matching the Air+ORC style
 # ════════════════════════════════════════════════════════════════════════════
 print("Generating Fig 5 — Air+Steam η_total vs TIT …")
-fig, ax = plt.subplots(figsize=(14, 10))
 
+STEAM_TOP_COLORS  = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+STEAM_TOP_MARKERS = ["o", "s", "^", "D", "v"]
+
+fig, ax = plt.subplots(figsize=(14, 10))
 BOT_STEAM = 100
-for p, col, lab in zip(P_TOP, POWER_COLORS_AIR, POWER_LABELS_AIR):
+for p, col, mk, lab in zip(P_TOP, STEAM_TOP_COLORS, STEAM_TOP_MARKERS, POWER_LABELS_AIR):
     mask = (AIR_STEAM[:, 1] == p) & (AIR_STEAM[:, 2] == BOT_STEAM)
     d    = AIR_STEAM[mask]
     d    = d[d[:, 0].argsort()]
-    ax.plot(d[:, 0], d[:, 5], color=col, lw=2.5, label=f"Air {lab}", zorder=3)
+    lw = 3.2 if p == 5 else 2.5
+    ax.plot(d[:, 0], d[:, 5], color=col, lw=lw, marker=mk, ms=8,
+            label=f"Air {lab}", zorder=3)
 
-# Steam-only at 100 MW horizontal reference
+# Air-only at 5 MW as dashed reference
+mask_air5 = AIR[:, 1] == 5
+d_air5 = AIR[mask_air5]; d_air5 = d_air5[d_air5[:, 0].argsort()]
+ax.plot(d_air5[:, 0], d_air5[:, 2],
+        color="#6d6875", lw=2, ls="--", alpha=0.8, label="Air only (5 MW)")
+
 ax.axhline(46.28, color="#d62728", lw=2, ls="--", alpha=0.85,
-           label="Steam only (100 MW, 565 °C)")
+           label="Steam ref. (100 MW, 565 °C)")
 
 ax.set_xlabel(r"Turbine inlet temperature  $T_\mathrm{IT}$  [°C]")
 ax.set_ylabel(r"Total thermal efficiency  $\eta_\mathrm{total}$  [%]")
 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
-ax.legend(loc="upper left", fontsize=19, ncol=2)
+ax.legend(loc="best", fontsize=19, ncol=2)
 fig.tight_layout()
-save(fig, "fig_air_steam_TIT.pdf")"""
+save(fig, "fig_air_steam_TIT.pdf")
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # FIGURE 6 — Global comparison : all cycles vs TIT
@@ -351,15 +364,11 @@ fig, ax = plt.subplots(figsize=(14, 10))
 
 TIT_FULL = np.arange(600, 1001, 50)
 
-# Air @ 5 MW
-d = AIR[AIR[:, 1] == 5]; d = d[d[:, 0].argsort()]
-ax.plot(d[:, 0], d[:, 2], color="#1f77b4", lw=2.5, marker="o", ms=8,
-        label="Air Brayton (5 MW)")
-
-# sCO2 (only T ≥ 600 for fair comparison on same x-axis)
-d = SCO2[SCO2[:, 0] >= 600]
-ax.plot(d[:, 0], d[:, 1], color="#2ca02c", lw=2.5, marker="s", ms=8,
-        label=r"sCO$_2$ recompression (5 MW)")
+# Air + Steam : 5 MW top + 100 MW Steam
+mask = (AIR_STEAM[:, 1] == 5) & (AIR_STEAM[:, 2] == 100)
+d = AIR_STEAM[mask]; d = d[d[:, 0].argsort()]
+ax.plot(d[:, 0], d[:, 5], color="#d62728", lw=2.5, marker="D", ms=9,
+        label="Air + Steam (5 + 100 MW)")
 
 # Air + ORC : 0.5 MW top + 5 MW ORC  (best config — optimal PR at high TIT)
 mask = (AIR_ORC[:, 1] == 0.5) & (AIR_ORC[:, 2] == 5)
@@ -367,11 +376,19 @@ d = AIR_ORC[mask]; d = d[d[:, 0].argsort()]
 ax.plot(d[:, 0], d[:, 5], color="#9467bd", lw=2.5, marker="^", ms=9,
         label="Air + ORC (0.5 + 5 MW)")
 
-# Air + Steam : 5 MW top + 100 MW Steam
-mask = (AIR_STEAM[:, 1] == 5) & (AIR_STEAM[:, 2] == 100)
-d = AIR_STEAM[mask]; d = d[d[:, 0].argsort()]
-ax.plot(d[:, 0], d[:, 5], color="#d62728", lw=2.5, marker="D", ms=9,
-        label="Air + Steam (5 + 100 MW)")
+# sCO2 (only T ≥ 600 for fair comparison on same x-axis)
+d = SCO2[SCO2[:, 0] >= 600]
+ax.plot(d[:, 0], d[:, 1], color="#2ca02c", lw=2.5, marker="s", ms=8,
+        label=r"sCO$_2$ recompression (5 MW)")
+
+# Air @ 5 MW
+d = AIR[AIR[:, 1] == 5]; d = d[d[:, 0].argsort()]
+ax.plot(d[:, 0], d[:, 2], color="#1f77b4", lw=2.5, marker="o", ms=8,
+        label="Air Brayton (5 MW)")
+
+
+
+
 
 # Steam band (shaded, 4–100 MW)
 ax.axhspan(37.63, 46.28, alpha=0.12, color="#ff7f0e", label="Steam Rankine (4–100 MW)")
@@ -384,7 +401,7 @@ ax.set_ylabel(r"Thermal efficiency  $\eta$  [%]")
 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
 ax.set_ylim(28, 58)
-ax.legend(loc="upper left", fontsize=20)
+ax.legend(loc="best", fontsize=20)
 fig.tight_layout()
 save(fig, "fig_comparison_global.pdf")
 

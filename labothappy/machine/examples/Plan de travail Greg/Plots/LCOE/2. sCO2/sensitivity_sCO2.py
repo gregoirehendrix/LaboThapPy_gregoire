@@ -75,7 +75,7 @@ def plot_sensitivity(cost_factors, eta_factors, LCOE, label, filename):
                         vmin=LCOE_fine.min(), vmax=LCOE_fine.max())
 
     cbar = fig.colorbar(pcm, ax=ax, pad=0.02)
-    cbar.set_label(r'LCOE  [€$\,$MWh$^{-1}$]', fontsize=24)
+    cbar.set_label(r'LCOE  [€/MWh]', fontsize=24)
     cbar.ax.tick_params(labelsize=20)
 
     # Contour lines
@@ -88,11 +88,11 @@ def plot_sensitivity(cost_factors, eta_factors, LCOE, label, filename):
                         levels=[LCOE_REF], colors=['#2c5f7a'],
                         linewidths=3, linestyles='--')
     ax.clabel(cs_ref,
-              fmt=f'{LCOE_REF:.1f}' + r'$\,$€$\,$MWh$^{-1}$',
+              fmt=f'{LCOE_REF:.1f}' + r'€/MWh',
               fontsize=20, inline=True)
 
     ax.text(0.98, 0.98,
-            f'Current: {LCOE[0, 0]:.1f}' + r'$\,$€$\,$MWh$^{-1}$',
+            f'Current: {LCOE[0, 0]:.1f}' + r'€/MWh',
             transform=ax.transAxes,
             fontsize=20,
             verticalalignment='top',

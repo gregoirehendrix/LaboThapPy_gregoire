@@ -69,7 +69,7 @@ pcm = ax.pcolormesh(cost_red_grid, eta_imp_grid, LCOE_fine,
                     vmin=LCOE_ref - 2, vmax=LCOE_fine.max())
 
 cbar = fig.colorbar(pcm, ax=ax, pad=0.02)
-cbar.set_label(r'LCOE  [€ MWh$^{-1}$]', fontsize=24)
+cbar.set_label(r'LCOE  [€/MWh]', fontsize=24)
 cbar.ax.tick_params(labelsize=20)
 
 contours = ax.contour(cost_red_grid, eta_imp_grid, LCOE_fine,
@@ -80,13 +80,13 @@ ax.clabel(contours, inline=True, fontsize=14, fmt='%.0f')
 ax.text(0.97, 0.05,
         f'Reference ({LCOE_ref:.1f}\u202f\u20ac\u202fMWh\u207b\u00b9)\nnot reached within range\n'
         f'(min:\u202f{LCOE_fine.min():.1f}\u202f\u20ac\u202fMWh\u207b\u00b9)',
-        transform=ax.transAxes, ha='right', va='bottom', fontsize=17,
+        transform=ax.transAxes, ha='right', va='bottom', fontsize=20,
         color='#2c5f7a',
         bbox=dict(boxstyle='round,pad=0.4', fc='white', ec='#2c5f7a',
                   alpha=0.85, lw=1.5))
 
 ax.text(0.98, 0.98,
-        f'Current: {LCOE_curr:.1f}' + r'$\,$€$\,$MWh$^{-1}$',
+        f'Current: {LCOE_curr:.1f}' + r'€/MWh',
         transform=ax.transAxes,
         fontsize=20,
         verticalalignment='top',

@@ -112,22 +112,24 @@ for i, T in enumerate(T_hot_values):
     print(f"{T:>6}°C | {s:>10} | {r:>12} | {f:>10}")
     
 # ── Plot ──────────────────────────────────────────────────────────────────────
-C_SIMPLE = '#d62728'
-C_RECUP  = '#ff7f0e'
-C_FULL   = '#1f77b4'
+COLORS  = ["#2ca02c", "#ff7f0e", "#1f77b4"] 
+MARKERS = ["^", "s", "o"]
 
 fig, ax = plt.subplots(figsize=(14, 10))
 
-ax.plot(T_hot_values, eta_simple,     color=C_SIMPLE, linewidth=2.5, label='Simple')
-ax.plot(T_hot_values, eta_recup_list, color=C_RECUP,  linewidth=2.5, label='Recuperated')
-ax.plot(T_hot_values, eta_full,       color=C_FULL,   linewidth=2.5, label='Recuperated + IC + RH')
+ax.plot(T_hot_values, eta_full,       color=COLORS[2], lw=2.5, marker=MARKERS[2], ms=8,
+        label='Recuperated + IC + RH', zorder=3)
+ax.plot(T_hot_values, eta_recup_list, color=COLORS[1], lw=2.5, marker=MARKERS[1], ms=8,
+        label='Recuperated', zorder=3)
+ax.plot(T_hot_values, eta_simple,     color=COLORS[0], lw=2.5, marker=MARKERS[0], ms=8,
+        label='Simple', zorder=3)
 
 ax.set_xlabel(r'Hot source temperature $T_{\mathrm{hot,in}}$ [°C]')
 ax.set_ylabel(r'Cycle efficiency $\eta$ [%]')
 ax.legend(loc='upper left')
 ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v:.0f}%'))
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v:.0f}'))
 
 fig.tight_layout()
 path = os.path.join(SAVE_DIR, 'fig_air_brayton_TIT.pdf')

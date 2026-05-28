@@ -77,7 +77,7 @@ ax1.set_ylim(0, max(total_capex) * 1.18)
 ax1.set_xticks(x)
 ax1.set_xticklabels(sizes)
 
-ax2.set_ylabel('LCOE [€ MWh$^{-1}$]')
+ax2.set_ylabel('LCOE [€/MWh]')
 ax2.set_ylim(50, 115)
 ax2.yaxis.set_major_locator(ticker.MultipleLocator(10))
 ax2.tick_params(labelsize=24)

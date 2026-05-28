@@ -71,7 +71,7 @@ pcm = ax.pcolormesh(cost_red_grid, eta_imp_grid, LCOE_fine,
                     vmin=LCOE_fine.min(), vmax=LCOE_fine.max())
 
 cbar = fig.colorbar(pcm, ax=ax, pad=0.02)
-cbar.set_label(r'LCOE  [€ MWh$^{-1}$]', fontsize=24)
+cbar.set_label(r'LCOE  [€/MWh]', fontsize=24)
 cbar.ax.tick_params(labelsize=20)
 
 # Contour lines
@@ -82,11 +82,11 @@ ax.clabel(contours, inline=True, fontsize=14, fmt='%.0f')
 # Competitiveness isocurve
 cs_ref = ax.contour(cost_red_grid, eta_imp_grid, LCOE_fine,
                     levels=[LCOE_ref], colors=['#2c5f7a'], linewidths=3, linestyles='--')
-ax.clabel(cs_ref, fmt=f'{LCOE_ref:.1f}' + r' €$\,$MWh$^{-1}$', fontsize=20, inline=True)
+ax.clabel(cs_ref, fmt=f'{LCOE_ref:.1f}' + r'€/MWh', fontsize=20, inline=True)
 
 
 ax.text(0.98, 0.98,
-        f'Current: {LCOE[0, 0]:.1f}' + r'$\,$€$\,$MWh$^{-1}$',
+        f'Current: {LCOE[0, 0]:.1f}' + r'€/MWh',
         transform=ax.transAxes,
         fontsize=20,
         verticalalignment='top',

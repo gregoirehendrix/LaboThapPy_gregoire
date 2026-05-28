@@ -47,14 +47,14 @@ eta_cooler = 0.95
 
 T_hot_values = np.arange(600, 1001, 25)  # °C
 
-# ── Colormap: 5 shades of blue ────────────────────────────────────────────────
-cmap   = plt.cm.Blues
-colors = [cmap(0.35 + 0.13 * i) for i in range(len(PR_configs))]
+# ── Colormap: qualitative palette + distinct markers ─────────────────────────
+COLORS  = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+MARKERS = ["v", "D", "^", "s", "o"]
 
 # ── Sweep ─────────────────────────────────────────────────────────────────────
 fig, ax = plt.subplots(figsize=(14, 10))
 
-for (PR, W_MW), color in zip(PR_configs, colors):
+for (PR, W_MW), color, mk in zip(PR_configs, COLORS, MARKERS):
     P_high = P_low * PR
     P_mid  = np.sqrt(P_low * P_high)
     eta_list = []
@@ -89,15 +89,15 @@ for (PR, W_MW), color in zip(PR_configs, colors):
             print(f"PR={PR} | T={T_hot_C}°C | FAILED: {e}")
             eta_list.append(np.nan)
 
-    ax.plot(T_hot_values, eta_list, color=color, linewidth=2.5,
-            label=f'{W_MW} MW  (PR = {PR:.2f})')
+    ax.plot(T_hot_values, eta_list, color=color, lw=2.5, marker=mk, ms=8,
+            label=f'{W_MW} MW  (PR = {PR:.2f})', zorder=3)
 
 ax.set_xlabel(r'Hot source temperature $T_{\mathrm{hot,in}}$ [°C]')
 ax.set_ylabel(r'Cycle efficiency $\eta$ [%]')
-ax.legend(loc='upper left')
+ax.legend(loc='best')
 ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v:.0f}%'))
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v:.0f}'))
 
 fig.tight_layout()
 path = os.path.join(SAVE_DIR, 'fig_air_brayton_PR.pdf')
